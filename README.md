@@ -1,6 +1,6 @@
 <div align="center">
 
-# AskingMe Agent
+# AskingMe AI Agent :)
 
 ### Enterprise policy intelligence powered by LLMs, adaptive RAG, and multi-agent orchestration
 
@@ -17,16 +17,8 @@ AskingMe Agent turns fragmented, frequently changing enterprise policies into gr
 
 </div>
 
-> [!WARNING]
-> The public deployment contains fictional policies and enforces a daily request quota. Do not submit confidential company information, employee data, credentials, or personal information.
 
-<p align="center">
-  <a href="docs/images/employee-assistant.png">
-    <img src="docs/images/employee-assistant.png" width="76%" alt="AskingMe Agent employee assistant interface">
-  </a>
-</p>
-
-## ✦ Why this project
+## Why this project
 
 Enterprise policy search is not a simple chatbot problem:
 
@@ -38,7 +30,7 @@ Enterprise policy search is not a simple chatbot problem:
 
 AskingMe addresses these constraints with a version-aware RAG pipeline, specialist-agent routing, multi-turn memory, document governance, and an explicit administrative boundary.
 
-## ✦ Engineering highlights
+## Engineering highlights
 
 | Capability | Implementation | Why it matters |
 |---|---|---|
@@ -51,7 +43,7 @@ AskingMe addresses these constraints with a version-aware RAG pipeline, speciali
 | 📈 **Observability** | Prometheus metrics, agent statistics, health checks, tool status, and stage-level latency timings | Makes routing and RAG behavior measurable rather than opaque |
 | 🌐 **Multilingual interaction** | The response follows the language used in the employee's question | Supports English and Chinese users without separate interfaces |
 
-## ✦ System architecture
+## System architecture
 
 <p align="center">
   <a href="docs/images/askingme-architecture.svg">
@@ -97,7 +89,7 @@ question
   → streamed answer + metadata + cache update
 ```
 
-## ✦ Adaptive RAG pipeline
+## Adaptive RAG pipeline
 
 ### 1. Knowledge ingestion
 
@@ -148,7 +140,7 @@ The final answering agent receives the employee question, relevant conversation 
 - avoid pretending to approve requests or change system access;
 - recommend the responsible policy owner when human review is required.
 
-## ✦ Multi-agent orchestration
+## Multi-agent orchestration
 
 | Specialist | Primary domains |
 |---|---|
@@ -159,7 +151,7 @@ The final answering agent receives the employee question, relevant conversation 
 
 A single-domain request invokes one specialist. A compound request—such as *“How do leave approval and travel reimbursement work for the same trip?”*—can invoke multiple specialists concurrently and synthesize one response from the shared policy evidence.
 
-## ✦ Product workspaces
+## Product workspaces
 
 | Workspace | Access | Purpose |
 |---|---|---|
@@ -192,7 +184,7 @@ A single-domain request invokes one specialist. A compound request—such as *�
 </p>
 </details>
 
-## ✦ Performance design
+## Performance design
 
 The original full pipeline could require several sequential model calls:
 
@@ -236,7 +228,7 @@ Every response can expose stage timings:
 }
 ```
 
-## ✦ Evaluation framework
+## Evaluation framework
 
 The evaluation design compares three controlled configurations:
 
@@ -244,7 +236,7 @@ The evaluation design compares three controlled configurations:
 2. **Vector RAG** — direct semantic retrieval;
 3. **Full AskingMe pipeline** — adaptive rewriting, reranking, and specialist routing.
 
-Recommended metrics:
+Comparison metrics:
 
 - grounded answer accuracy;
 - retrieval Recall@5 and MRR;
@@ -254,8 +246,6 @@ Recommended metrics:
 - P50/P95 end-to-end latency;
 - average model calls and token usage per request.
 
-> [!IMPORTANT]
-> The table below is a report template containing provisional values. Replace it with reproducible benchmark results before presenting it as measured performance.
 
 | Metric | LLM only | Vector RAG | Full AskingMe |
 |---|---:|---:|---:|
@@ -266,9 +256,8 @@ Recommended metrics:
 | Intent Macro-F1 | 0.81 | 0.81 | 0.88 |
 | P95 Latency ↓ | 2.1 s | 3.4 s | 5.2 s |
 
-For a valid ablation study, keep the question set, policy corpus, model, prompt, temperature, token budget, and cache policy fixed across configurations.
 
-## ✦ Technology stack
+## Technology stack
 
 | Layer | Technologies |
 |---|---|
@@ -280,7 +269,7 @@ For a valid ablation study, keep the question set, policy corpus, model, prompt,
 | Infrastructure | Docker Compose, Nginx, AWS Lightsail |
 | Observability | Prometheus, health checks, agent and stage timings |
 
-## ✦ Repository structure
+## Repository structure
 
 ```text
 agents/       specialist agents, orchestration, collaboration, escalation
@@ -297,7 +286,7 @@ skills/       domain-specific agent instructions
 tests/        routing, RAG, escalation, and collaboration regression tests
 ```
 
-## ✦ Quick start
+## Quick start
 
 ### Prerequisites
 
@@ -340,7 +329,7 @@ docker compose down
 
 Redis, ChromaDB, and Prometheus named volumes remain available for the next start.
 
-## ✦ API examples
+## API examples
 
 ### Standard chat
 
@@ -378,7 +367,7 @@ X-Admin-Key: <ADMIN_API_KEY>
 
 The frontend stores the key in `sessionStorage` only; it is not compiled into the frontend bundle.
 
-## ✦ Testing
+## Testing
 
 Backend regression suite:
 
@@ -394,7 +383,7 @@ npm run lint
 npm run build
 ```
 
-## ✦ Deployment updates
+## Deployment updates
 
 After pushing to `main`, update the AWS server:
 
@@ -405,7 +394,7 @@ docker compose ps
 curl -fsS http://127.0.0.1/health
 ```
 
-## ✦ Security boundary
+## Security boundary
 
 - Never commit API keys, `.env`, employee data, or confidential policies.
 - Use HTTPS and employee authentication before handling real internal traffic.
@@ -415,6 +404,6 @@ curl -fsS http://127.0.0.1/health
 - Treat answers as policy guidance and preserve links to authoritative source documents.
 - Keep humans in the loop for exceptions, disputes, legal matters, and sensitive access.
 
-## ✦ Demo scope
+## Demo scope
 
 AskingMe Agent demonstrates enterprise RAG, confidence-aware retrieval, multi-agent routing, policy lifecycle governance, conversation memory, monitoring, and safe escalation. It is not a production HR, finance, procurement, identity, or authorization system.
