@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" viewBox="0 0 1440 720" role="img" aria-labelledby="title desc">
+  <title id="title">AskingMe Agent request workflow</title>
+  <desc id="desc">A branded workflow diagram showing quota and cache checks, parallel context retrieval, adaptive RAG, specialist routing, grounded answer generation, and streaming.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfdfb"/>
+      <stop offset="1" stop-color="#edf7f1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#123f34" flood-opacity=".10"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#6f9588"/>
+    </marker>
+    <style>
+      .title{font:700 34px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#123f34}
+      .subtitle{font:400 16px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#66877c}
+      .eyebrow{font:700 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:2px;fill:#6d9486}
+      .step{font:700 18px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#173f35}
+      .body{font:400 13px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#6e8b81}
+      .pill{font:650 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#315d4f}
+      .line{fill:none;stroke:#86a89c;stroke-width:2.2;marker-end:url(#arrow)}
+      .softLine{fill:none;stroke:#a9c1b8;stroke-width:1.7;stroke-dasharray:5 6;marker-end:url(#arrow)}
+    </style>
+  </defs>
+
+  <rect width="1440" height="720" rx="28" fill="url(#background)"/>
+  <circle cx="1360" cy="42" r="160" fill="#dff5e8" opacity=".7"/>
+  <text x="64" y="66" class="eyebrow">REQUEST WORKFLOW</text>
+  <text x="64" y="108" class="title">A fast path for simple questions. An adaptive path for hard ones.</text>
+  <text x="64" y="139" class="subtitle">Every response is grounded in approved policy evidence and delivered with visible processing metadata.</text>
+
+  <!-- Main flow -->
+  <path d="M258 298H306" class="line"/>
+  <path d="M518 298H566" class="line"/>
+  <path d="M778 298H826" class="line"/>
+  <path d="M1038 298H1086" class="line"/>
+
+  <rect x="64" y="208" width="194" height="180" rx="22" fill="#ffffff" stroke="#d2e5db" filter="url(#shadow)"/>
+  <circle cx="98" cy="246" r="18" fill="#83e0b7"/>
+  <text x="98" y="252" text-anchor="middle" class="step" style="font-size:14px">1</text>
+  <text x="126" y="251" class="step">Ask</text>
+  <text x="88" y="291" class="body">Employee sends a policy</text>
+  <text x="88" y="313" class="body">question through the React</text>
+  <text x="88" y="335" class="body">streaming interface.</text>
+  <rect x="88" y="353" width="108" height="24" rx="12" fill="#e8f7ee"/>
+  <text x="142" y="370" text-anchor="middle" class="pill">POST /chat/stream</text>
+
+  <rect x="306" y="208" width="212" height="180" rx="22" fill="#ffffff" stroke="#d2e5db" filter="url(#shadow)"/>
+  <circle cx="340" cy="246" r="18" fill="#83e0b7"/>
+  <text x="340" y="252" text-anchor="middle" class="step" style="font-size:14px">2</text>
+  <text x="368" y="251" class="step">Protect</text>
+  <text x="330" y="291" class="body">Validate the daily quota,</text>
+  <text x="330" y="313" class="body">then check the version-aware</text>
+  <text x="330" y="335" class="body">answer cache.</text>
+  <rect x="330" y="353" width="139" height="24" rx="12" fill="#e8f7ee"/>
+  <text x="399.5" y="370" text-anchor="middle" class="pill">quota · cache · version</text>
+
+  <rect x="566" y="208" width="212" height="180" rx="22" fill="#123f34" filter="url(#shadow)"/>
+  <circle cx="600" cy="246" r="18" fill="#83e0b7"/>
+  <text x="600" y="252" text-anchor="middle" class="step" style="font-size:14px">3</text>
+  <text x="628" y="251" class="step" style="fill:#ffffff">Understand</text>
+  <text x="590" y="291" class="body" style="fill:#cbe3d8">Load conversation memory</text>
+  <text x="590" y="313" class="body" style="fill:#cbe3d8">and retrieve relevant policy</text>
+  <text x="590" y="335" class="body" style="fill:#cbe3d8">evidence in parallel.</text>
+  <rect x="590" y="353" width="128" height="24" rx="12" fill="#ffffff" fill-opacity=".12"/>
+  <text x="654" y="370" text-anchor="middle" class="pill" style="fill:#d8eee4">Redis + ChromaDB</text>
+
+  <rect x="826" y="208" width="212" height="180" rx="22" fill="#ffffff" stroke="#d2e5db" filter="url(#shadow)"/>
+  <circle cx="860" cy="246" r="18" fill="#83e0b7"/>
+  <text x="860" y="252" text-anchor="middle" class="step" style="font-size:14px">4</text>
+  <text x="888" y="251" class="step">Orchestrate</text>
+  <text x="850" y="291" class="body">Route to Expense, HR,</text>
+  <text x="850" y="313" class="body">Access, or General agents;</text>
+  <text x="850" y="335" class="body">combine when cross-domain.</text>
+  <rect x="850" y="353" width="139" height="24" rx="12" fill="#e8f7ee"/>
+  <text x="919.5" y="370" text-anchor="middle" class="pill">parallel specialists</text>
+
+  <rect x="1086" y="208" width="290" height="180" rx="22" fill="#ffffff" stroke="#b9ddca" filter="url(#shadow)"/>
+  <circle cx="1120" cy="246" r="18" fill="#83e0b7"/>
+  <text x="1120" y="252" text-anchor="middle" class="step" style="font-size:14px">5</text>
+  <text x="1148" y="251" class="step">Answer &amp; stream</text>
+  <text x="1110" y="291" class="body">Claude composes one grounded,</text>
+  <text x="1110" y="313" class="body">actionable answer from approved</text>
+  <text x="1110" y="335" class="body">evidence and agent guidance.</text>
+  <rect x="1110" y="353" width="198" height="24" rx="12" fill="#dff5e8"/>
+  <text x="1209" y="370" text-anchor="middle" class="pill">answer · evidence · timings</text>
+
+  <!-- Adaptive layer -->
+  <rect x="306" y="476" width="732" height="156" rx="24" fill="#ffffff" stroke="#d2e5db"/>
+  <text x="338" y="513" class="eyebrow">ADAPTIVE DEPTH</text>
+
+  <rect x="338" y="538" width="194" height="64" rx="16" fill="#eef8f2"/>
+  <text x="360" y="565" class="step" style="font-size:15px">Direct retrieval</text>
+  <text x="360" y="586" class="body">Default low-latency path</text>
+
+  <path d="M532 570H575" class="softLine"/>
+  <rect x="575" y="538" width="194" height="64" rx="16" fill="#eef8f2"/>
+  <text x="597" y="565" class="step" style="font-size:15px">Query rewrite</text>
+  <text x="597" y="586" class="body">Only when recall is weak</text>
+
+  <path d="M769 570H812" class="softLine"/>
+  <rect x="812" y="538" width="194" height="64" rx="16" fill="#eef8f2"/>
+  <text x="834" y="565" class="step" style="font-size:15px">LLM reranking</text>
+  <text x="834" y="586" class="body">Only when results are close</text>
+
+  <path d="M672 388V450C672 465 660 476 645 476" class="softLine"/>
+
+  <!-- Outcome -->
+  <rect x="1086" y="476" width="290" height="156" rx="24" fill="#123f34"/>
+  <text x="1118" y="513" class="eyebrow" style="fill:#86d9b0">VISIBLE OUTCOME</text>
+  <text x="1118" y="549" class="step" style="fill:#ffffff">Grounded and inspectable</text>
+  <text x="1118" y="577" class="body" style="fill:#cbe3d8">Knowledge-use status · specialist route</text>
+  <text x="1118" y="599" class="body" style="fill:#cbe3d8">Conversation continuity · stage timings</text>
+
+  <text x="64" y="680" class="body">Cached answers return early; new questions continue through evidence retrieval and specialist orchestration.</text>
+</svg>

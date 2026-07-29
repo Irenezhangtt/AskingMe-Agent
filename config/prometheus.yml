@@ -1,0 +1,26 @@
+# Prometheus configuration — AskingMe Agent enterprise policy Q&A system
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'askingme'
+    environment: 'production'
+
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  # AskingMe Agent application metrics
+  - job_name: 'askingme-app'
+    static_configs:
+      - targets: ['askingme:8000']
+        labels:
+          service: 'askingme'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

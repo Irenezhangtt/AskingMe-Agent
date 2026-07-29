@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">AskingMe Agent high-level architecture</title>
+  <desc id="desc">A branded architecture diagram showing the employee and administrator experiences, FastAPI orchestration, adaptive RAG, specialist agents, Claude, Redis, ChromaDB, and observability.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fcf9"/>
+      <stop offset="1" stop-color="#edf7f1"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123f34"/>
+      <stop offset="1" stop-color="#1f624f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#123f34" flood-opacity=".10"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#6f9588"/>
+    </marker>
+    <style>
+      .title{font:700 34px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#123f34}
+      .subtitle{font:400 16px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#66877c}
+      .eyebrow{font:700 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:2px;fill:#6d9486}
+      .section{font:700 18px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#123f34}
+      .label{font:650 15px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#173f35}
+      .small{font:400 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#789388}
+      .whiteLabel{font:650 15px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#fff}
+      .whiteSmall{font:400 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#cbe3d8}
+      .line{fill:none;stroke:#86a89c;stroke-width:2;marker-end:url(#arrow)}
+      .softLine{fill:none;stroke:#b8cec5;stroke-width:1.5;stroke-dasharray:5 6;marker-end:url(#arrow)}
+    </style>
+  </defs>
+
+  <rect width="1440" height="820" rx="28" fill="url(#background)"/>
+  <circle cx="1320" cy="54" r="180" fill="#dff5e8" opacity=".6"/>
+  <circle cx="70" cy="790" r="170" fill="#e3f5eb" opacity=".7"/>
+
+  <text x="64" y="66" class="eyebrow">ASKINGME AGENT</text>
+  <text x="64" y="108" class="title">Enterprise policy intelligence, from question to grounded answer</text>
+  <text x="64" y="139" class="subtitle">One application for employee guidance, governed policy knowledge, and observable multi-agent orchestration.</text>
+
+  <!-- Experience layer -->
+  <rect x="64" y="184" width="292" height="548" rx="24" fill="#ffffff" stroke="#d3e5dc" filter="url(#shadow)"/>
+  <text x="92" y="220" class="eyebrow">EXPERIENCE LAYER</text>
+  <text x="92" y="253" class="section">Three connected workspaces</text>
+
+  <rect x="92" y="285" width="236" height="112" rx="18" fill="#e8f7ee" stroke="#c6e5d5"/>
+  <circle cx="124" cy="319" r="17" fill="#83e0b7"/>
+  <path d="M124 309v20M114 319h20" stroke="#164c3e" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="154" y="316" class="label">Employee Assistant</text>
+  <text x="154" y="339" class="small">Streaming policy Q&amp;A</text>
+  <text x="154" y="358" class="small">Memory · evidence · multilingual</text>
+
+  <rect x="92" y="417" width="236" height="112" rx="18" fill="#f5faf7" stroke="#d5e6dd"/>
+  <circle cx="124" cy="451" r="17" fill="#c9ead9"/>
+  <circle cx="121" cy="448" r="6" fill="none" stroke="#164c3e" stroke-width="2"/>
+  <path d="M126 453l6 6" stroke="#164c3e" stroke-width="2" stroke-linecap="round"/>
+  <text x="154" y="448" class="label">Knowledge Lab</text>
+  <text x="154" y="471" class="small">Search · import · approve</text>
+  <text x="154" y="490" class="small">Version · replace · delete</text>
+
+  <rect x="92" y="549" width="236" height="112" rx="18" fill="#f5faf7" stroke="#d5e6dd"/>
+  <circle cx="124" cy="583" r="17" fill="#c9ead9"/>
+  <path d="M116 576h16v15h-16zM121 576v15M127 576v15" fill="none" stroke="#164c3e" stroke-width="1.8"/>
+  <text x="154" y="580" class="label">Agent Operations</text>
+  <text x="154" y="603" class="small">Health · agents · skills</text>
+  <text x="154" y="622" class="small">Metrics · routing visibility</text>
+
+  <!-- Gateway -->
+  <path d="M356 458H420" class="line"/>
+  <rect x="420" y="397" width="150" height="122" rx="22" fill="#ffffff" stroke="#cfe2d8" filter="url(#shadow)"/>
+  <rect x="448" y="421" width="94" height="35" rx="17.5" fill="#e8f7ee"/>
+  <text x="495" y="444" text-anchor="middle" class="eyebrow" style="letter-spacing:1px">NGINX</text>
+  <text x="495" y="482" text-anchor="middle" class="section">FastAPI</text>
+  <text x="495" y="503" text-anchor="middle" class="small">secure API gateway</text>
+
+  <!-- Intelligence core -->
+  <path d="M570 458H625" class="line"/>
+  <rect x="625" y="184" width="432" height="548" rx="26" fill="url(#hero)" filter="url(#shadow)"/>
+  <text x="657" y="220" class="eyebrow" style="fill:#86d9b0">INTELLIGENCE CORE</text>
+  <text x="657" y="255" class="section" style="fill:#ffffff">Adaptive orchestration</text>
+  <text x="657" y="280" class="whiteSmall">Use the fast path when confidence is high.</text>
+
+  <rect x="657" y="312" width="368" height="82" rx="18" fill="#ffffff" fill-opacity=".09" stroke="#91cbb3" stroke-opacity=".55"/>
+  <circle cx="692" cy="353" r="20" fill="#83e0b7"/>
+  <text x="692" y="359" text-anchor="middle" class="label">1</text>
+  <text x="726" y="346" class="whiteLabel">Intent &amp; policy decision</text>
+  <text x="726" y="369" class="whiteSmall">Local routing with LLM fallback</text>
+
+  <path d="M841 394V420" class="softLine"/>
+  <rect x="657" y="420" width="176" height="122" rx="18" fill="#ffffff" fill-opacity=".09" stroke="#91cbb3" stroke-opacity=".55"/>
+  <text x="679" y="453" class="whiteLabel">Adaptive RAG</text>
+  <text x="679" y="478" class="whiteSmall">Direct retrieval</text>
+  <text x="679" y="499" class="whiteSmall">Rewrite if weak</text>
+  <text x="679" y="520" class="whiteSmall">Rerank if ambiguous</text>
+
+  <rect x="849" y="420" width="176" height="122" rx="18" fill="#ffffff" fill-opacity=".09" stroke="#91cbb3" stroke-opacity=".55"/>
+  <text x="871" y="453" class="whiteLabel">Agent Orchestrator</text>
+  <text x="871" y="478" class="whiteSmall">Expense · HR</text>
+  <text x="871" y="499" class="whiteSmall">Access · General</text>
+  <text x="871" y="520" class="whiteSmall">Parallel collaboration</text>
+
+  <path d="M745 542V572H841" class="softLine"/>
+  <path d="M937 542V572H841" class="softLine"/>
+  <rect x="657" y="572" width="368" height="112" rx="18" fill="#83e0b7"/>
+  <text x="681" y="610" class="label">Grounded answer composer</text>
+  <text x="681" y="635" class="small" style="fill:#315d4f">Merge policy evidence and specialist guidance</text>
+  <text x="681" y="656" class="small" style="fill:#315d4f">with escalation and knowledge-use metadata.</text>
+
+  <!-- Platform services -->
+  <path d="M1057 458H1104" class="line"/>
+  <rect x="1104" y="184" width="272" height="548" rx="24" fill="#ffffff" stroke="#d3e5dc" filter="url(#shadow)"/>
+  <text x="1132" y="220" class="eyebrow">PLATFORM SERVICES</text>
+  <text x="1132" y="253" class="section">Knowledge and runtime</text>
+
+  <rect x="1132" y="285" width="216" height="88" rx="17" fill="#e8f7ee" stroke="#c7e5d6"/>
+  <circle cx="1163" cy="329" r="18" fill="#83e0b7"/>
+  <path d="M1155 324c0-5 16-5 16 0v10c0 5-16 5-16 0zM1155 324c0 5 16 5 16 0M1155 329c0 5 16 5 16 0" fill="none" stroke="#164c3e" stroke-width="1.7"/>
+  <text x="1192" y="323" class="label">ChromaDB</text>
+  <text x="1192" y="345" class="small">approved policy vectors</text>
+
+  <rect x="1132" y="393" width="216" height="88" rx="17" fill="#f5faf7" stroke="#d5e6dd"/>
+  <circle cx="1163" cy="437" r="18" fill="#c9ead9"/>
+  <path d="M1155 431h16v12h-16zM1158 427h10M1158 447h10" fill="none" stroke="#164c3e" stroke-width="1.8" stroke-linecap="round"/>
+  <text x="1192" y="431" class="label">Redis</text>
+  <text x="1192" y="453" class="small">memory · quota · cache</text>
+
+  <rect x="1132" y="501" width="216" height="88" rx="17" fill="#f5faf7" stroke="#d5e6dd"/>
+  <circle cx="1163" cy="545" r="18" fill="#c9ead9"/>
+  <path d="M1155 550l5-12 5 7 6-10" fill="none" stroke="#164c3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1192" y="539" class="label">Anthropic Claude</text>
+  <text x="1192" y="561" class="small">reasoning and generation</text>
+
+  <rect x="1132" y="609" width="216" height="88" rx="17" fill="#f5faf7" stroke="#d5e6dd"/>
+  <circle cx="1163" cy="653" r="18" fill="#c9ead9"/>
+  <path d="M1155 659v-8M1161 659v-15M1167 659v-22M1173 659v-11" stroke="#164c3e" stroke-width="2.2" stroke-linecap="round"/>
+  <text x="1192" y="647" class="label">Observability</text>
+  <text x="1192" y="669" class="small">Prometheus · timings</text>
+
+  <text x="64" y="780" class="small">Fast when the answer is clear. Deeper retrieval and collaboration only when the question needs it.</text>
+</svg>

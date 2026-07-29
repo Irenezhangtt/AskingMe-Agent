@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Environment variables (contain sensitive information)
+.env
+
+# Data directories
+data/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker build artifacts
+build-image*.sh
+
+# Local ChromaDB data
+*.sqlite3
+
+# Backup files
+*~
+*.bak
+docker-compose(1).yml
