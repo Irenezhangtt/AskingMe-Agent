@@ -34,14 +34,14 @@ AskingMe addresses these constraints with a version-aware RAG pipeline, speciali
 
 | Capability | Implementation | Why it matters |
 |---|---|---|
-| 🧠 **Adaptive RAG** | Direct vector retrieval first; query rewriting and LLM reranking only when confidence is weak | Preserves retrieval quality without paying the full latency cost on every request |
-| 🧭 **Multi-agent routing** | Expense, HR, Access, and General specialists with parallel execution for cross-domain questions | Keeps prompts domain-focused and supports compound employee requests |
-| 📚 **Policy lifecycle** | PDF/DOCX/TXT/MD/JSON ingestion, duplicate detection, draft approval, version replacement, archival, and deletion | Prevents outdated policy versions from silently grounding answers |
-| ⚡ **Latency-aware execution** | Local intent fast path, parallel context loading, answer caching, model separation, and streamed responses | Reduces common-path model calls and improves perceived responsiveness |
-| 💬 **Conversation memory** | Redis-backed multi-turn context with browser-persisted conversation IDs | Supports follow-up and recall questions without resending full history |
-| 🛡️ **Safe escalation** | Human-review recommendations for missing provisions, conflicts, exceptions, and sensitive access | Avoids presenting generated guidance as an administrative decision |
-| 📈 **Observability** | Prometheus metrics, agent statistics, health checks, tool status, and stage-level latency timings | Makes routing and RAG behavior measurable rather than opaque |
-| 🌐 **Multilingual interaction** | The response follows the language used in the employee's question | Supports English and Chinese users without separate interfaces |
+|  **Adaptive RAG** | Direct vector retrieval first; query rewriting and LLM reranking only when confidence is weak | Preserves retrieval quality without paying the full latency cost on every request |
+|  **Multi-agent routing** | Expense, HR, Access, and General specialists with parallel execution for cross-domain questions | Keeps prompts domain-focused and supports compound employee requests |
+|  **Policy lifecycle** | PDF/DOCX/TXT/MD/JSON ingestion, duplicate detection, draft approval, version replacement, archival, and deletion | Prevents outdated policy versions from silently grounding answers |
+|  **Latency-aware execution** | Local intent fast path, parallel context loading, answer caching, model separation, and streamed responses | Reduces common-path model calls and improves perceived responsiveness |
+|  **Conversation memory** | Redis-backed multi-turn context with browser-persisted conversation IDs | Supports follow-up and recall questions without resending full history |
+|  **Safe escalation** | Human-review recommendations for missing provisions, conflicts, exceptions, and sensitive access | Avoids presenting generated guidance as an administrative decision |
+|  **Observability** | Prometheus metrics, agent statistics, health checks, tool status, and stage-level latency timings | Makes routing and RAG behavior measurable rather than opaque |
+|  **Multilingual interaction** | The response follows the language used in the employee's question | Supports English and Chinese users without separate interfaces |
 
 ## System architecture
 
