@@ -32,6 +32,10 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel, Field
 from core.conversation_rules import is_conversation_memory_query
+from rag.policy_uploads import (
+    MAX_FILE_BYTES, MAX_TOTAL_TEXT, UploadedPriceRequest,
+    calculate_uploaded_price, extract_policy, image_block,
+)
 
 load_dotenv()
 
@@ -888,7 +892,14 @@ def _extract_uploaded_documents(filename: str, content: bytes, title: str = "") 
         from pypdf import PdfReader
         try:
             reader = PdfReader(io.BytesIO(content))
-            text = "\n\n".join((page.extract_text() or "").strip() for page in reader.pages)
+            if reader.is_encrypted or len(reader.pages) > 30:
+                raise HTTPException(400, "Use an unencrypted PDF with at most 30 pages")
+            pages = [(page.extract_text() or "").strip() for page in reader.pages]
+            if any(not page for page in pages):
+                raise HTTPException(400, "A PDF page has no extractable text. Upload page screenshots so policy conditions are not omitted.")
+            text = "\n\n".join(f"[Page {i}]\n{page}" for i, page in enumerate(pages, 1))
+        except HTTPException:
+            raise
         except Exception as ex:
             raise HTTPException(400, f"Failed to parse PDF: {ex}") from ex
         if not text.strip():
@@ -899,12 +910,15 @@ def _extract_uploaded_documents(filename: str, content: bytes, title: str = "") 
         from docx import Document
         try:
             document = Document(io.BytesIO(content))
-            parts = [paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text.strip()]
-            for table in document.tables:
-                for row in table.rows:
-                    cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-                    if cells:
-                        parts.append(" | ".join(cells))
+            from docx.text.paragraph import Paragraph
+            parts = []
+            for block in document.iter_inner_content():
+                if isinstance(block, Paragraph):
+                    if block.text.strip():
+                        parts.append(block.text.strip())
+                else:
+                    for row in block.rows:
+                        parts.append(" | ".join(cell.text.strip() for cell in row.cells))
             text = "\n".join(parts)
         except Exception as ex:
             raise HTTPException(400, f"Failed to parse DOCX: {ex}") from ex
@@ -912,23 +926,97 @@ def _extract_uploaded_documents(filename: str, content: bytes, title: str = "") 
             raise HTTPException(400, "The DOCX file contains no extractable text")
         return [{"title": default_title, "content": text}]
 
-    text = content.decode("utf-8", errors="ignore")
+    if suffix not in {".txt", ".md", ".json"}:
+        raise HTTPException(415, "Supported files are PDF, DOCX, TXT, MD, and JSON")
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError as ex:
+        raise HTTPException(400, "Save text documents as UTF-8 before uploading") from ex
     if suffix == ".json":
         try:
             docs = json.loads(text)
             if not isinstance(docs, list):
                 raise HTTPException(400, "JSON must be an array: [{title, content}, ...]")
-            if not all(isinstance(doc, dict) and doc.get("title") and doc.get("content") for doc in docs):
+            if not docs or not all(isinstance(doc, dict) and isinstance(doc.get("title"), str) and doc['title'].strip()
+                                   and isinstance(doc.get("content"), str) and doc['content'].strip() for doc in docs):
                 raise HTTPException(400, "Every JSON item requires non-empty title and content fields")
             return docs
         except json.JSONDecodeError as ex:
             raise HTTPException(400, f"Failed to parse JSON: {ex}") from ex
 
-    if suffix not in {".txt", ".md"}:
-        raise HTTPException(415, "Supported files are PDF, DOCX, TXT, MD, and JSON")
     if not text.strip():
         raise HTTPException(400, "The uploaded file is empty")
     return [{"title": default_title, "content": text}]
+
+
+@app.post("/pricing/extract", tags=["Policy Calculator"], dependencies=[Depends(require_admin_key)])
+async def extract_uploaded_policies(files: List[UploadFile] = File(...)):
+    """Preview policy text/OCR, dates and tags without publishing to shared knowledge."""
+    if _rag is None:
+        raise HTTPException(503, "The pricing service is not ready")
+    if not 1 <= len(files) <= 8:
+        raise HTTPException(400, "Upload between one and eight policy files")
+    # Validate the whole batch before incurring model calls. Never silently truncate evidence.
+    prepared, total_bytes, total_text = [], 0, 0
+    for file in files:
+        content = await file.read(MAX_FILE_BYTES + 1)
+        total_bytes += len(content)
+        if len(content) > MAX_FILE_BYTES or total_bytes > 20 * 1024 * 1024:
+            raise HTTPException(413, "Use files up to 5 MB each and 20 MB per batch")
+        filename = pathlib.Path(file.filename or "policy").name[:256]
+        suffix = pathlib.Path(filename).suffix.lower()
+        try:
+            if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+                block = await asyncio.to_thread(image_block, content)
+                prepared.append((filename, {"image": block}))
+            else:
+                if suffix == ".pdf":
+                    from pypdf import PdfReader
+                    reader = await asyncio.to_thread(PdfReader, io.BytesIO(content))
+                    if reader.is_encrypted or len(reader.pages) > 30:
+                        raise ValueError("Use an unencrypted PDF with at most 30 pages")
+                if suffix == ".docx":
+                    import zipfile
+                    with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                        if sum(item.file_size for item in archive.infolist()) > 20 * 1024 * 1024:
+                            raise ValueError("The expanded DOCX exceeds 20 MB")
+                docs = await asyncio.to_thread(_extract_uploaded_documents, filename, content)
+                text = "\n\n".join(str(doc['content']) for doc in docs)
+                total_text += len(text)
+                if not text.strip() or len(text) > 16000 or total_text > MAX_TOTAL_TEXT:
+                    raise ValueError("Use up to 16,000 text characters per file and 48,000 per batch")
+                prepared.append((filename, {"text": text}))
+        except HTTPException:
+            raise
+        except Exception as ex:
+            raise HTTPException(400, f"Cannot read {filename}. Use a valid supported file within the size limits.") from ex
+    policies = []
+    try:
+        async with asyncio.timeout(180):
+            for filename, kwargs in prepared:
+                policy = await extract_policy(_rag.llm, filename, **kwargs)
+                policies.append(policy)
+        if sum(len(policy.content) for policy in policies) > MAX_TOTAL_TEXT:
+            raise ValueError("Combined extracted text exceeds 48,000 characters; upload fewer files")
+    except ValueError as ex:
+        raise HTTPException(422, "Policy extraction could not be validated. Use shorter files or clearer images and explicit validity dates.") from ex
+    except Exception as ex:
+        logger.warning("Policy extraction provider failed: %s", type(ex).__name__)
+        raise HTTPException(502, "Policy extraction is unavailable. Check that the configured model supports vision, then retry.") from ex
+    return {"policies": [policy.model_dump(mode="json") for policy in policies],
+            "notice": "Review text, dates and labels against the original files. Files are processed by the configured AI provider and are not saved to the shared knowledge base."}
+
+
+@app.post("/pricing/calculate", tags=["Policy Calculator"], dependencies=[Depends(require_admin_key)])
+async def calculate_from_uploaded_policies(body: UploadedPriceRequest):
+    """Calculate using only the reviewed evidence attached to this request."""
+    if _rag is None:
+        raise HTTPException(503, "The pricing service is not ready")
+    try:
+        return await asyncio.wait_for(calculate_uploaded_price(_rag.llm, body), timeout=90)
+    except Exception as ex:
+        logger.warning("Uploaded policy calculation failed: %s", type(ex).__name__)
+        raise HTTPException(502, "The calculation service is unavailable; no final price was generated. Retry shortly.") from ex
 
 
 @app.post("/knowledge/upload", tags=["Knowledge Base"], dependencies=[Depends(require_admin_key)])

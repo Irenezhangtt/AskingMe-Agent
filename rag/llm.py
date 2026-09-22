@@ -36,7 +36,7 @@ class PricingLLM:
         ]).partial(system_instructions=SYSTEM)
 
     async def rewrite(self, question, history=''):
-        response = await self.client.messages.create(model=self.model, max_tokens=300, temperature=0,
+        response = await self.client.messages.create(model=self.model, max_tokens=300,
             system='Rewrite the pricing question as one English search query. Preserve all original numbers, entities, conditions, promotions, and dates. Do not infer new facts. Return only the rewritten query.',
             messages=[{'role': 'user', 'content': json.dumps({'question': question, 'history': history}, ensure_ascii=False)}])
         return extract_text_content(response.content).strip()
@@ -46,7 +46,7 @@ class PricingLLM:
                               for i, d in enumerate(documents, 1))
         messages = self.prompt.format_messages(question=question, history=history, context=context)
         response = await self.client.messages.create(
-            model=self.model, max_tokens=1200, temperature=0, system=messages[0].content,
+            model=self.model, max_tokens=1200, system=messages[0].content,
             messages=[{'role': 'user', 'content': messages[1].content}])
         raw = extract_text_content(response.content).strip()
         try:

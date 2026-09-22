@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './App.css'
+import PolicyCalculator from './PolicyCalculator'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
@@ -58,7 +59,7 @@ function RuleFilters({ value, onChange }) {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState('chat')
+  const [activeView, setActiveView] = useState('pricing')
   const [messages, setMessages] = useState(loadMessages)
   const [input, setInput] = useState('')
   const [convId, setConvId] = useState(
@@ -481,6 +482,7 @@ function App() {
     (quota.available === false || Number(quota.remaining) <= 0)
 
   const navigation = [
+    { id: 'pricing', icon: '▧', label: 'Policy Calculator', detail: 'Upload → review → calculate' },
     { id: 'chat', icon: '✦', label: 'Final Price Agent', detail: 'Calculate & explain' },
     { id: 'knowledge', icon: '⌕', label: 'Knowledge lab', detail: 'Search & import' },
     { id: 'operations', icon: '◫', label: 'Operations', detail: 'Health & agents' },
@@ -502,6 +504,7 @@ function App() {
             <button
               className={activeView === item.id ? 'active' : ''}
               type="button"
+              aria-label={item.label}
               onClick={() => openView(item.id)}
               key={item.id}
             >
@@ -551,9 +554,15 @@ function App() {
 
         <div className="sidebar-footer">
           <span className="status-dot" />
-          Free public demo
+          {activeView === 'pricing' ? 'Private policy workspace' : 'Free public demo'}
         </div>
       </aside>
+
+      {activeView === 'pricing' && <section className="workspace-panel">
+        <WorkspaceHeader eyebrow="Final Price AI Agent" title="Your policies. Your price." description="Calculate from uploaded offer documents and screenshots, with dates, labels and cited policy evidence." serviceStatus={serviceStatus} />
+        {!adminKey ? <AdminGate draft={adminDraft} setDraft={setAdminDraft} error={adminError} onSubmit={unlockAdmin} />
+          : <PolicyCalculator apiBase={API_BASE_URL} adminKey={adminKey} />}
+      </section>}
 
       {activeView === 'chat' && <section className="chat-panel">
         <header className="chat-header">

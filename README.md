@@ -14,7 +14,7 @@
 **[Try the live demo ↗](https://irenezhangtt.github.io/AskingMe-Agent/)** &nbsp; · &nbsp; **[Architecture](#architecture)** &nbsp; · &nbsp; **[Quick start](#quick-start)** &nbsp; · &nbsp; **[Technical guide](docs/technical-guide.md)**
 
 AskingMe turns complex promotion rules into a clear, traceable final price.<br>
-Retrieve the evidence. Check the conditions. Compute the amount.
+Upload policy files or screenshots. Check dates and conditions. Compute the amount.
 
 </div>
 
@@ -28,6 +28,26 @@ Retrieve the evidence. Check the conditions. Compute the amount.
   <strong>400.00 − 50.00 − 20.00 → 10% member discount → CNY 297.00</strong><br>
   <sub>Open the interactive demo to change the inputs and follow the calculation.</sub>
 </p>
+
+## Upload your policies → calculate your price
+
+The full application now opens with **Policy Calculator**. Upload offer documents or screenshots, review the extracted text, effective dates and labels, then enter the purchase date and order facts. The agent uses **only those uploaded policies** to check eligibility and calculate a cited final price.
+
+<p align="center"><img src="docs/images/policy-upload-workflow.svg" width="100%" alt="Five stages: upload documents or screenshots, extract evidence, review dates and labels, check order eligibility, calculate with Decimal"></p>
+
+| You provide | The agent does |
+|---|---|
+| Policy documents or screenshots | Reads text or uses vision to preserve amounts, conditions and exclusions |
+| Reviewed policy dates and labels | Excludes expired/not-yet-effective policies; checks written conditions against order facts |
+| Original subtotal, purchase date, category and eligibility facts | Computes supported prices with Decimal, or asks for missing information |
+| Several overlapping policies | Keeps active evidence together and flags conflicts instead of assuming stacking |
+
+**[Setup and upload workflow →](docs/policy-calculator.md)** · Requires the full backend and a vision-capable model. The public explorer below remains a separate, fixed-rule demonstration.
+
+<details><summary><strong>See the policy upload workspace</strong></summary>
+<br>
+<img src="docs/images/policy-calculator.png" width="100%" alt="Policy Calculator with uploaded September promotion, extracted validity and labels, and review controls">
+</details>
 
 ## Live demo
 
@@ -64,6 +84,7 @@ AskingMe connects **evidence retrieval**, **rule interpretation**, and **executa
 
 | Capability | Implementation | Purpose |
 |---|---|---|
+| **Uploaded policy calculation** | File/vision extraction → review → date gate → plan → Decimal | Calculate from request-scoped evidence and explicit order facts |
 | **Stateful reasoning** | LangGraph analysis → retrieval → reranking → answer plan | Reformulate weak queries with bounded retries |
 | **Hybrid retrieval** | Elasticsearch BM25 + BGE vectors, combined with RRF | Match semantic questions and exact amounts or terms |
 | **Rule integrity** | Hierarchical Markdown chunking, bracket checks, metadata | Preserve nested conditions and complete formulas |
@@ -80,7 +101,7 @@ AskingMe connects **evidence retrieval**, **rule interpretation**, and **executa
   </a>
 </p>
 
-The AI interprets retrieved rules and proposes a plan. The calculation tool validates supported arithmetic and computes the final price. Model-dependent eligibility and rule selection still require evaluation; deterministic arithmetic alone does not establish end-to-end accuracy.
+The diagram above describes the shared-knowledge chat path. The upload workflow uses all reviewed policies in the current request, with an explicit date gate, before the same bounded Decimal execution. The AI interprets the evidence and proposes a plan. The calculation tool validates supported arithmetic and computes the final price. Model-dependent eligibility and rule selection still require evaluation; deterministic arithmetic alone does not establish end-to-end accuracy.
 
 ### A calculation you can follow
 
@@ -106,7 +127,9 @@ docker compose up -d --build
 
 Open **[the local application](http://localhost)** or **[API documentation](http://localhost/docs)**. The first launch downloads the embedding and reranking models. An empty Elasticsearch index is seeded with the three English example rule documents.
 
-Try asking:
+For your own policies, open **Policy Calculator**, unlock with `ADMIN_API_KEY`, and follow the [upload guide](docs/policy-calculator.md). Screenshot extraction requires a vision-capable `ANSWER_MODEL`.
+
+For the shared-knowledge chat, try asking:
 
 > During the Demo Promotion, what is the final price of a CNY 400 appliance if I have a valid, claimed CNY 20 coupon and a membership?
 
@@ -116,8 +139,9 @@ For configuration, API examples, deployment notes, and model/index migration, se
 
 | Check | Verified status |
 |---|---|
-| Backend regression suite | **47 passed**, plus the optional ES test skipped in the offline run |
+| Backend regression suite | **62 passed**, plus the optional ES test skipped in the offline run |
 | Real Elasticsearch 8.17.2 integration | **Passed separately** — writes, BM25/kNN, filters, approval, archival, deletion |
+| Live screenshot-to-price smoke test | **Passed** — synthetic screenshot, validity extraction, CNY 297.00 and expired-policy exclusion |
 | Interactive demo calculation tests | **4 passed** — boundaries, eligibility, half-up rounding, invalid inputs |
 | Demo browser checks | Desktop scenarios and mobile overflow checks passed |
 | React frontend | Lint and production build passed |

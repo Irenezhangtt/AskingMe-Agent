@@ -216,3 +216,8 @@ Tests run actual LangGraph and FastAPI code with fake external models/services. 
 - Publishing source changes to GitHub does not redeploy an existing server. Rebuild the application stack to run this version.
 
 Implementation references: [English BGE model and query instruction](https://huggingface.co/BAAI/bge-small-en-v1.5), [LangGraph conditional edges](https://reference.langchain.com/python/langgraph/graph/state/StateGraph/add_conditional_edges), [Elasticsearch kNN filters](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/query-dsl-knn-query.html), [Sentence Transformers Cross-Encoder usage](https://www.sbert.net/docs/cross_encoder/usage/usage.html).
+
+
+## Uploaded policy calculation
+
+The default React view is now Policy Calculator: document/screenshot extraction, human review, order facts, validity filtering, and Decimal pricing. See the [upload workflow and API guide](policy-calculator.md) for `/pricing/extract` and `/pricing/calculate`, supported file types, limits, verification and data handling. This request-scoped path does not publish uploads to Elasticsearch.

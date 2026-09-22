@@ -1,0 +1,40 @@
+.policy-workspace { color: #173f33; }
+.policy-intro h2 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -.035em; margin: 12px 0; }
+.policy-intro p { color: #587366; line-height: 1.7; }
+.policy-progress { display: flex; list-style: none; gap: 12px; padding: 0; margin: 24px 0; }
+.policy-progress li { flex: 1; border-top: 2px solid #d8e1d8; padding: 12px 0; color: #819387; font-size: 12px; }
+.policy-progress span { margin-left: 8px; font-weight: 600; }
+.policy-progress .current, .policy-progress .complete { color: #173f33; border-color: #173f33; }
+.policy-card { background: #fffefa; border: 1px solid #d8e1d8; border-radius: 8px; padding: 26px; margin: 0 0 22px; }
+.policy-card fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.policy-card h2 { font-size: 24px; letter-spacing: -.025em; }
+.policy-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.policy-heading h3 { font-size: 18px; margin: 0; }
+.policy-badge { background: #edf2e7; color: #426251; padding: 6px 10px; border-radius: 4px; font-size: 11px; overflow-wrap: anywhere; }
+.policy-drop { display: grid; gap: 12px; padding: 26px; border: 1px dashed #8aa392; background: #f2f5ed; cursor: pointer; border-radius: 6px; }
+.policy-drop span { font-size: 12px; color: #587366; }
+.policy-drop input { max-width: 100%; }
+.policy-file-list { list-style: none; padding: 0; font-size: 13px; }
+.policy-file-list li { padding: 8px 0; overflow-wrap: anywhere; }
+.policy-file-list small { margin-left: 8px; color: #718477; }
+.policy-help { font-size: 12px; line-height: 1.7; color: #627568; }
+.policy-primary { display: inline-flex; align-items: center; gap: 24px; padding: 13px 20px; border: 0; border-radius: 5px; background: #173f33; color: #fffefa; font: inherit; font-size: 14px; cursor: pointer; }
+.policy-primary:disabled { opacity: .5; cursor: not-allowed; }
+.policy-evidence { margin: 22px 0 0; padding-top: 22px; border-top: 1px solid #d8e1d8; }
+.policy-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.policy-fields label, .policy-details { display: grid; gap: 8px; color: #466052; font-size: 12px; }
+.policy-fields input, .policy-fields select, .policy-details textarea, .policy-transcript textarea { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid #cdd9cd; padding: 11px; background: white; color: #173f33; border-radius: 4px; font: inherit; font-size: 14px; }
+.policy-details, .policy-transcript { margin: 20px 0; }
+.policy-transcript textarea { margin-top: 12px; font-size: 12px; line-height: 1.6; resize: vertical; }
+.policy-check { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.6; margin-top: 18px; }
+.policy-check input { margin-top: 4px; accent-color: #173f33; }
+.policy-quote { margin: 16px 0; border-left: 3px solid #b4c4a7; padding-left: 12px; font-size: 12px; color: #627568; }
+.policy-warnings { padding: 12px 12px 12px 30px; background: #fbf3df; color: #775623; font-size: 12px; line-height: 1.7; }
+.policy-status { padding: 16px; border: 1px solid #b4c4a7; border-radius: 6px; }
+.policy-result { border-top: 4px solid #173f33; overflow-wrap: anywhere; }
+.policy-result.clarification { border-top-color: #ad8642; }
+.policy-excluded { background: #f2f5ed; padding: 12px 18px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+.policy-source-text { white-space: pre-wrap; font-size: 12px; line-height: 1.7; }
+.policy-card summary { font-size: 13px; cursor: pointer; }
+@media (max-width: 1000px) { .policy-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .policy-fields { grid-template-columns: 1fr; } .policy-card { padding: 18px; } .policy-progress { gap: 8px; } .policy-progress span { margin-left: 3px; } .policy-drop { padding: 16px; } }
