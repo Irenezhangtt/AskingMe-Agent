@@ -23,3 +23,12 @@ httpx==0.28.1              # Webhook alerts in monitor/performance_monitor.py
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1
+
+# Stateful pricing RAG (Elasticsearch 8.x; LangChain prompt/document primitives)
+langgraph==0.2.76
+langchain-core==0.3.40
+elasticsearch==8.17.2
+sentence-transformers==3.4.1
+# Keep ChromaDB's tokenizer constraint compatible with sentence-transformers.
+transformers==4.46.3
+tokenizers==0.20.3

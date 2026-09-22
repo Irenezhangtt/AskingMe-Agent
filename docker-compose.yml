@@ -3,6 +3,25 @@
 
 services:
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - askingme-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
   # ── Redis cache (working memory) ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -86,12 +105,16 @@ services:
       - CHROMA_PERSIST_DIRECTORY=/app/data/chroma
       - EVAL_BASELINE_PATH=/app/data/eval/baseline.json
       - ASKINGME_SKILLS_DIR=/app/skills
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     volumes:
       - ./data/chroma:/app/data/chroma
       - ./data/eval:/app/data/eval
       - ./skills:/app/skills
       - ./logs:/app/logs
+      - model-cache:/home/askingme/.cache/huggingface
     depends_on:
+      elasticsearch:
+        condition: service_healthy
       redis:
         condition: service_healthy
       chromadb:
@@ -104,7 +127,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 90s
+      start_period: 600s
 
   # ── React frontend ──────────────────────────────────────────────────────────
   frontend:
@@ -156,6 +179,8 @@ networks:
 
 # ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
+  elasticsearch-data:
+  model-cache:
   redis-data:
   chromadb-data:
   prometheus-data:

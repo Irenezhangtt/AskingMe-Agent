@@ -16,7 +16,7 @@ import sys
 import time
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 
@@ -26,7 +26,7 @@ if _ROOT not in sys.path:
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Form, Header, HTTPException, Request, Response, UploadFile, File
+from fastapi import Depends, FastAPI, Form, Header, HTTPException, Request, Response, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
@@ -45,7 +45,7 @@ BANNER = r"""
     ʕ•ᴥ•ʔ  ʕ•ᴥ•ʔ  ʕ•ᴥ•ʔ
    ╔══════════════════════╗
     ║  AskingMe Agent v1   ║
-    ║ Enterprise Policy Assistant ║
+    ║ Final Price AI Agent ║
    ╚══════════════════════╝
     ʕ•ᴥ•ʔ  ʕ•ᴥ•ʔ  ʕ•ᴥ•ʔ
 """
@@ -57,6 +57,7 @@ _tool_manager = None
 _monitor      = None
 _evaluator    = None
 _skill_manager = None
+_rag = None
 
 def _anthropic_cfg() -> Dict[str, Any]:
     key = os.getenv("ANTHROPIC_API_KEY", "")
@@ -85,7 +86,7 @@ def _anthropic_cfg() -> Dict[str, Any]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _orchestrator, _memory, _tool_manager, _monitor, _evaluator, _skill_manager
+    global _orchestrator, _memory, _tool_manager, _monitor, _evaluator, _skill_manager, _rag
 
     print(BANNER, flush=True)
 
@@ -142,21 +143,33 @@ async def lifespan(app: FastAPI):
         model=cfg["retrieval_model"],
     )
 
-    # MCP tool manager and ChromaDB-backed RAG knowledge base
+    # Tool manager and configurable knowledge storage
     _tool_manager = MCPToolManager(
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
         model=cfg["model"],
     )
-    kb = KnowledgeBase(
-        chroma_host=os.getenv("CHROMA_HOST", "chromadb"),
-        chroma_port=int(os.getenv("CHROMA_PORT", "8000")),
-        chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/app/data/chroma"),
-    )
+    backend = os.getenv("RAG_BACKEND", "elasticsearch")
+    if backend not in {"elasticsearch", "chroma"}:
+        raise RuntimeError("RAG_BACKEND must be elasticsearch or chroma")
+    if backend == "elasticsearch":
+        from rag.factory import build_rag
+        _rag = await asyncio.to_thread(build_rag)
+        kb = _rag.store
+    else:
+        _rag = None
+        kb = KnowledgeBase(
+            chroma_host=os.getenv("CHROMA_HOST", "chromadb"),
+            chroma_port=int(os.getenv("CHROMA_PORT", "8000")),
+            chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/app/data/chroma"),
+        )
     logger.info(f"Knowledge base loaded: {kb.doc_count} document chunks")
     if os.getenv("RAG_WARMUP_ENABLED", "true").lower() == "true":
         try:
-            await asyncio.to_thread(kb.search, "company policy approval process", 1)
+            if _rag is not None:
+                await _rag.run("How does the CNY 50 discount on orders of CNY 300 or more combine with member benefits?", generate=False, use_rewrite=False, top_k=1)
+            else:
+                await asyncio.to_thread(kb.search, "company policy approval process", 1)
             logger.info("Knowledge-base embedding path warmed up")
         except Exception as ex:
             logger.warning("Knowledge-base warmup failed: %s", ex)
@@ -173,7 +186,7 @@ async def lifespan(app: FastAPI):
 
     _tool_manager.register(Tool(
         name="knowledge_search",
-        description="Search the policy knowledge base with ChromaDB vector retrieval",
+        description="Search approved rules with the configured retrieval backend",
         handler=kb.search_handler,
         schema={
             "type": "object",
@@ -213,13 +226,16 @@ async def lifespan(app: FastAPI):
     yield
 
     await _monitor.stop()
+    if _rag is not None:
+        await asyncio.to_thread(_rag.store.client.close)
+        await _rag.llm.client.close()
     logger.info("AskingMe Agent has shut down")
 
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="AskingMe Agent Enterprise Policy Assistant",
-    version="2.0.0",
+    title="AskingMe Final Price AI Agent",
+    version="3.0.0",
     lifespan=lifespan,
     docs_url="/docs",
 )
@@ -237,16 +253,26 @@ app.add_middleware(
         "http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173",
     ),
     allow_credentials=os.getenv("CORS_ALLOW_CREDENTIALS", "false").lower() == "true",
-    allow_methods=_csv_env("CORS_ALLOW_METHODS", "GET,POST,OPTIONS"),
-    allow_headers=_csv_env("CORS_ALLOW_HEADERS", "Content-Type,Authorization"),
+    allow_methods=_csv_env("CORS_ALLOW_METHODS", "GET,POST,DELETE,OPTIONS"),
+    allow_headers=_csv_env("CORS_ALLOW_HEADERS", "Content-Type,Authorization,X-Admin-Key"),
 )
 
 
 # ── Request and response models ───────────────────────────────────────────────
+class RetrievalFilters(BaseModel):
+    model_config = {"extra": "forbid"}
+    category: Optional[str] = Field(default=None, max_length=128)
+    event: Optional[str] = Field(default=None, max_length=128)
+    source_name: Optional[str] = Field(default=None, max_length=256)
+    document_id: Optional[str] = Field(default=None, max_length=128)
+    as_of: Optional[date] = None
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
     user_id: str = Field(default="anonymous", min_length=1, max_length=128)
     conv_id: Optional[str] = Field(default=None, max_length=128)
+    filters: RetrievalFilters = Field(default_factory=RetrievalFilters)
 
 
 class ChatResponse(BaseModel):
@@ -259,6 +285,8 @@ class ChatResponse(BaseModel):
     knowledge_used: bool = False
     cache_hit: bool = False
     timings: Dict[str, float] = Field(default_factory=dict)
+    sources: List[Dict[str, Any]] = Field(default_factory=list)
+    rag_trace: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 async def require_admin_key(
@@ -515,6 +543,9 @@ async def _process_chat(
     if _orchestrator is None or _memory is None:
         raise HTTPException(503, "Service is not ready")
 
+    if _rag is not None:
+        return await _process_pricing_chat(req, progress)
+
     from agents.agent_orchestrator import Request as OrcReq
     from memory.conversation_memory import MsgRole
 
@@ -612,6 +643,36 @@ async def _process_chat(
     if _is_answer_cacheable(req) and knowledge_used and not result.escalated:
         _set_cached_answer(req.message, response)
     return response
+
+
+async def _process_pricing_chat(req: ChatRequest, progress=None) -> ChatResponse:
+    """Run the full pricing graph; conversation-dependent answers bypass legacy cache."""
+    from memory.conversation_memory import MsgRole
+    started = time.monotonic()
+    conv_id = req.conv_id or str(uuid.uuid4())
+    if progress:
+        await progress({"type": "phase", "phase": "retrieval", "detail": "Analyzing the pricing question, retrieving rules, and ranking the evidence"})
+    memory = await _memory.get_context(req.user_id, conv_id, query=req.message)
+    history = memory.to_prompt_text()
+    try:
+        state = await _rag.run(req.message, filters=req.filters.model_dump(mode="json", exclude_none=True),
+                               history=history,
+                               token_callback=(lambda text: progress({"type": "answer", "delta": text})) if progress else None)
+    except ValueError as ex:
+        raise HTTPException(422, str(ex)) from ex
+    await _memory.add_message(req.user_id, conv_id, MsgRole.USER, req.message)
+    await _memory.add_message(req.user_id, conv_id, MsgRole.ASSISTANT, state["answer"])
+    timings = {}
+    for step in state["trace"]:
+        key = step["stage"] + "_ms"
+        timings[key] = round(timings.get(key, 0) + step["latency_ms"], 2)
+    total = round((time.monotonic() - started) * 1000, 1)
+    timings["total_ms"] = total
+    return ChatResponse(conv_id=conv_id, response=state["answer"], intent="pricing_rules", agent_type="pricing_rag",
+                        escalated=not state["sufficient"], latency_ms=total, knowledge_used=bool(state["documents"]),
+                        timings=timings, rag_trace=state["trace"],
+                        sources=[{k: row.get(k) for k in ("chunk_id", "document_id", "title", "source_name", "version", "heading_path", "score")}
+                                 for row in state["documents"]])
 
 
 def _is_answer_cacheable(req: ChatRequest) -> bool:
@@ -757,8 +818,14 @@ async def prometheus_metrics():
 
 
 @app.post("/search", dependencies=[Depends(require_admin_key)])
-async def search(query: str, top_k: int = 5):
-    """Demonstrate query rewriting, parallel retrieval, reranking, and top-K selection."""
+async def search(query: str = Query(min_length=1, max_length=4000), top_k: int = Query(default=5, ge=1, le=20),
+                 category: Optional[str] = None, event: Optional[str] = None, as_of: Optional[date] = None):
+    """Inspect the same retrieval graph used by chat, without answer generation."""
+    if _rag is not None:
+        filters = RetrievalFilters(category=category, event=event, as_of=as_of).model_dump(mode="json", exclude_none=True)
+        state = await _rag.run(query, filters=filters, top_k=top_k, generate=False)
+        return {"query": query, "results": state["documents"], "reranked": True,
+                "trace": state["trace"], "sufficient": state["sufficient"]}
     if _tool_manager is None:
         raise HTTPException(503, "Service is not ready")
     result = await _tool_manager.search_with_rewrite("knowledge_search", query, top_k=top_k)
@@ -799,12 +866,15 @@ class EvalRunInput(BaseModel):
 
 @app.post("/knowledge/add", tags=["Knowledge Base"], dependencies=[Depends(require_admin_key)])
 async def add_knowledge(body: BatchDocInput):
-    """Import, chunk, and embed documents in ChromaDB."""
+    """Import, chunk, and embed documents in the configured knowledge store."""
     tool = _tool_manager._tools.get("knowledge_search") if _tool_manager else None
     if tool is None:
         raise HTTPException(503, "Knowledge base is not initialized")
     kb = tool.handler.__self__
-    count = kb.add_documents([{"title": d.title, "content": d.content} for d in body.documents])
+    try:
+        count = await asyncio.to_thread(kb.add_documents, [{"title": d.title, "content": d.content} for d in body.documents])
+    except ValueError as ex:
+        raise HTTPException(400, str(ex)) from ex
     _invalidate_answer_cache()
     return {"message": f"Imported {count} document chunks", "added_chunks": count, "total_chunks": kb.doc_count}
 
@@ -868,6 +938,10 @@ async def upload_knowledge(
     version: str = Form("1.0"),
     approve: bool = Form(False),
     replaces_document_id: str = Form(""),
+    category: str = Form(""),
+    event: str = Form(""),
+    effective_from: Optional[date] = Form(None),
+    effective_to: Optional[date] = Form(None),
 ):
     """Parse and import a versioned policy file as a draft or approved document."""
     tool = _tool_manager._tools.get("knowledge_search") if _tool_manager else None
@@ -875,7 +949,9 @@ async def upload_knowledge(
         raise HTTPException(503, "Knowledge base is not initialized")
     kb = tool.handler.__self__
 
-    content = await file.read()
+    if effective_from and effective_to and effective_from > effective_to:
+        raise HTTPException(400, "effective_from must not be after effective_to")
+    content = await file.read(10 * 1024 * 1024 + 1)
     if len(content) > 10 * 1024 * 1024:
         raise HTTPException(413, "File exceeds the 10 MB limit")
 
@@ -885,13 +961,16 @@ async def upload_knowledge(
     imported = []
     try:
         for doc in docs:
-            imported.append(kb.import_document(
+            imported.append(await asyncio.to_thread(kb.import_document,
                 title=str(doc["title"]),
                 content=str(doc["content"]),
                 version=str(doc.get("version", version)),
                 status="approved" if approve else "draft",
                 source_name=filename,
                 replaces_document_id=replaces_document_id,
+                metadata={k: v for k, v in {"category": category, "event": event,
+                          "effective_from": effective_from.isoformat() if effective_from else None,
+                          "effective_to": effective_to.isoformat() if effective_to else None}.items() if v},
             ))
     except DuplicateDocumentError as ex:
         raise HTTPException(
@@ -921,7 +1000,7 @@ async def knowledge_stats():
     if tool is None:
         raise HTTPException(503, "Knowledge base is not initialized")
     kb = tool.handler.__self__
-    documents = kb.list_documents()
+    documents = await asyncio.to_thread(kb.list_documents)
     status_counts: Dict[str, int] = {}
     for document in documents:
         status = document["status"]
@@ -939,7 +1018,7 @@ async def list_knowledge_documents():
     tool = _tool_manager._tools.get("knowledge_search") if _tool_manager else None
     if tool is None:
         raise HTTPException(503, "Knowledge base is not initialized")
-    return {"documents": tool.handler.__self__.list_documents()}
+    return {"documents": await asyncio.to_thread(tool.handler.__self__.list_documents)}
 
 
 @app.post(
@@ -953,7 +1032,7 @@ async def approve_knowledge_document(document_id: str):
     if tool is None:
         raise HTTPException(503, "Knowledge base is not initialized")
     try:
-        document = tool.handler.__self__.approve_document(document_id)
+        document = await asyncio.to_thread(tool.handler.__self__.approve_document, document_id)
     except KeyError as ex:
         raise HTTPException(404, "Document not found") from ex
     _invalidate_answer_cache()
@@ -971,7 +1050,7 @@ async def delete_knowledge_document(document_id: str):
     if tool is None:
         raise HTTPException(503, "Knowledge base is not initialized")
     try:
-        document = tool.handler.__self__.delete_document(document_id)
+        document = await asyncio.to_thread(tool.handler.__self__.delete_document, document_id)
     except KeyError as ex:
         raise HTTPException(404, "Document not found") from ex
     if document.get("status") == "approved":

@@ -85,6 +85,7 @@ class KnowledgeBase:
         status: str = "draft",
         source_name: str = "",
         replaces_document_id: str = "",
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Import one versioned document with exact-content duplicate detection."""
         title = title.strip()
@@ -111,10 +112,11 @@ class KnowledgeBase:
             except KeyError as ex:
                 raise ValueError("The document selected for replacement does not exist") from ex
         imported_at = datetime.now(timezone.utc).isoformat()
-        chunks = self._chunk_text(content, chunk_size=500)
+        chunks, chunk_metadata = self._prepare_chunks(content, document_id, title, metadata or {})
         ids = [f"{document_id}:{index}" for index in range(len(chunks))]
         metadatas = [
             {
+                **chunk_metadata[index],
                 "document_id": document_id,
                 "title": title,
                 "policy_key": policy_key,
@@ -333,6 +335,10 @@ class KnowledgeBase:
                 ids.append(chunk_id)
                 updated.append(next_meta)
             self._collection.update(ids=ids, metadatas=updated)
+
+    def _prepare_chunks(self, content, document_id, title, metadata):
+        chunks = self._chunk_text(content, chunk_size=500)
+        return chunks, [dict(metadata) for _ in chunks]
 
     def _chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
         """Split long text by sentence or newline while respecting chunk_size."""

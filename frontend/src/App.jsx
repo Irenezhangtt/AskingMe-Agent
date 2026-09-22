@@ -5,19 +5,19 @@ import './App.css'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
-const GITHUB_URL = 'https://github.com/Irenezhangtt/AskingMe-AI-Agent'
+const GITHUB_URL = 'https://github.com/Irenezhangtt/AskingMe-Agent'
 
 const welcomeMessage = {
   id: 'welcome',
   role: 'assistant',
   content:
-    'Hello, I am AskingMe Agent, your enterprise policy assistant. Ask me about expenses, travel, leave, attendance, procurement, or system access, and I will use the latest policy knowledge base to explain the applicable rules and steps.',
+    'Hello, I am AskingMe, your Final Price AI Agent. I use approved rules to work out applicable discounts and a Decimal calculation tool to compute supported final prices, with calculation steps and source citations. Try asking: During the Demo Promotion, what is the final price of a CNY 400 appliance if I have a valid, claimed CNY 20 coupon and a membership?',
 }
 
 function loadMessages() {
   try {
     const stored = JSON.parse(
-      localStorage.getItem('askingme_messages') || 'null',
+      localStorage.getItem('askingme_pricing_en_messages') || 'null',
     )
     return Array.isArray(stored) && stored.length ? stored : [welcomeMessage]
   } catch {
@@ -49,12 +49,20 @@ async function readApiError(response) {
   return payload?.message || `Request failed (${response.status})`
 }
 
+function RuleFilters({ value, onChange }) {
+  return <div className="pricing-filters">
+    <label>Product category<input value={value.category} placeholder="Optional, e.g. Appliances" onChange={(e) => onChange({ ...value, category: e.target.value })} /></label>
+    <label>Promotion<input value={value.event} placeholder="Optional, e.g. Demo Promotion" onChange={(e) => onChange({ ...value, event: e.target.value })} /></label>
+    <label>Applicable date<input type="date" value={value.as_of} onChange={(e) => onChange({ ...value, as_of: e.target.value })} /></label>
+  </div>
+}
+
 function App() {
   const [activeView, setActiveView] = useState('chat')
   const [messages, setMessages] = useState(loadMessages)
   const [input, setInput] = useState('')
   const [convId, setConvId] = useState(
-    () => localStorage.getItem('askingme_conv_id') || null,
+    () => localStorage.getItem('askingme_pricing_en_conv_id') || null,
   )
   const [userId] = useState(createUserId)
   const [isSending, setIsSending] = useState(false)
@@ -71,6 +79,7 @@ function App() {
   const [knowledgeDocuments, setKnowledgeDocuments] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
+  const [retrievalFilters, setRetrievalFilters] = useState({ category: '', event: '', as_of: '' })
   const [isSearching, setIsSearching] = useState(false)
   const [uploadStatus, setUploadStatus] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -87,7 +96,7 @@ function App() {
   }, [messages, isSending])
 
   useEffect(() => {
-    localStorage.setItem('askingme_messages', JSON.stringify(messages))
+    localStorage.setItem('askingme_pricing_en_messages', JSON.stringify(messages))
   }, [messages])
 
   useEffect(() => {
@@ -158,6 +167,7 @@ function App() {
           message,
           user_id: userId,
           conv_id: convId,
+          filters: Object.fromEntries(Object.entries(retrievalFilters).filter(([, value]) => value)),
         }),
       })
       const remaining = response.headers.get('X-RateLimit-Remaining')
@@ -207,9 +217,9 @@ function App() {
           } else if (eventData.type === 'meta') {
             responseMeta = eventData.data
             setConvId(responseMeta.conv_id)
-            localStorage.setItem('askingme_conv_id', responseMeta.conv_id)
+            localStorage.setItem('askingme_pricing_en_conv_id', responseMeta.conv_id)
           } else if (eventData.type === 'answer') {
-            setStreamPhase('Writing the policy-grounded answer')
+            setStreamPhase('Writing an answer grounded in the pricing rules')
             setMessages((current) =>
               current.map((item) =>
                 item.id === assistantId
@@ -238,6 +248,7 @@ function App() {
                       escalated: responseMeta.escalated,
                       latency: responseMeta.latency_ms,
                       cacheHit: responseMeta.cache_hit,
+                      sources: responseMeta.sources || [],
                     }
                   : undefined,
               }
@@ -260,8 +271,8 @@ function App() {
   }
 
   function resetConversation() {
-    localStorage.removeItem('askingme_conv_id')
-    localStorage.removeItem('askingme_messages')
+    localStorage.removeItem('askingme_pricing_en_conv_id')
+    localStorage.removeItem('askingme_pricing_en_messages')
     setConvId(null)
     setMessages([welcomeMessage])
     setInput('')
@@ -348,7 +359,7 @@ function App() {
     setIsSearching(true)
     setAdminError('')
     try {
-      const params = new URLSearchParams({ query, top_k: '5' })
+      const params = new URLSearchParams({ query, top_k: '5', ...Object.fromEntries(Object.entries(retrievalFilters).filter(([, value]) => value)) })
       const response = await fetch(`${API_BASE_URL}/search?${params}`, {
         method: 'POST',
         headers: adminHeaders(),
@@ -373,6 +384,10 @@ function App() {
     try {
       const formData = new FormData()
       formData.append('file', file)
+      for (const field of ['category', 'event', 'effective_from', 'effective_to']) {
+        const value = event.currentTarget.elements[field].value
+        if (value) formData.append(field, value)
+      }
       formData.append('title', event.currentTarget.elements.policyTitle.value)
       formData.append('version', event.currentTarget.elements.policyVersion.value || '1.0')
       formData.append('approve', event.currentTarget.elements.approveNow.checked ? 'true' : 'false')
@@ -466,7 +481,7 @@ function App() {
     (quota.available === false || Number(quota.remaining) <= 0)
 
   const navigation = [
-    { id: 'chat', icon: '✦', label: 'Employee assistant', detail: 'Policy Q&A' },
+    { id: 'chat', icon: '✦', label: 'Final Price Agent', detail: 'Calculate & explain' },
     { id: 'knowledge', icon: '⌕', label: 'Knowledge lab', detail: 'Search & import' },
     { id: 'operations', icon: '◫', label: 'Operations', detail: 'Health & agents' },
   ]
@@ -478,7 +493,7 @@ function App() {
           <div className="brand-mark" aria-hidden="true">A</div>
           <div>
             <strong>AskingMe Agent</strong>
-            <span>Enterprise Policy Assistant</span>
+            <span>Final Price AI Agent</span>
           </div>
         </div>
 
@@ -528,7 +543,7 @@ function App() {
 
         <div className="demo-card">
           <strong>About this demo</strong>
-          <p>Policy version retrieval, query rewriting, LLM reranking, and multi-agent collaboration.</p>
+          <p>Calculate final prices from discount rules, with Decimal arithmetic and cited evidence.</p>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
             View the GitHub project ↗
           </a>
@@ -543,8 +558,8 @@ function App() {
       {activeView === 'chat' && <section className="chat-panel">
         <header className="chat-header">
           <div>
-            <span className="eyebrow">Enterprise Policy Assistant</span>
-            <h1>Which company policy can I help with?</h1>
+            <span className="eyebrow">Final Price AI Agent</span>
+            <h1>What is your final price?</h1>
           </div>
           <div className={`online-badge ${serviceStatus}`}>
             <span className="status-dot" />
@@ -596,6 +611,13 @@ function App() {
                     </div>
                   )}
                 </div>
+                {message.meta?.sources?.length > 0 && (
+                  <details className="source-evidence"><summary>Rule sources ({message.meta.sources.length})</summary>
+                    <ol>{message.meta.sources.map((source, index) => <li key={source.chunk_id || index}>
+                      {source.title} · {source.heading_path} · v{source.version}<br /><small>{source.source_name}</small>
+                    </li>)}</ol>
+                  </details>
+                )}
                 {message.meta &&
                   (message.meta.knowledgeUsed || message.meta.escalated) && (
                   <div className="message-meta">
@@ -612,6 +634,7 @@ function App() {
         </div>
 
         <div className="composer-wrap">
+          <RuleFilters value={retrievalFilters} onChange={setRetrievalFilters} />
           {quotaExhausted && (
             <div className="quota-message">
               Today&apos;s free demo quota is exhausted and resets at 00:00 UTC. You can still review this conversation and the source code.
@@ -626,7 +649,7 @@ function App() {
               placeholder={
                 quotaExhausted
                   ? "Today's demo quota is exhausted"
-                  : 'Example: What documents are required for travel reimbursement?'
+                  : 'Example: A CNY 400 appliance, CNY 50 off orders of CNY 300 or more, a valid CNY 20 coupon, and 10% off for members. What is the final price?'
               }
               rows="1"
               disabled={isSending || quotaExhausted}
@@ -651,8 +674,8 @@ function App() {
         <section className="workspace-panel">
           <WorkspaceHeader
             eyebrow="Knowledge management"
-            title="Policy knowledge lab"
-            description="Test semantic retrieval and import approved policy documents into the live RAG index."
+            title="Pricing knowledge lab"
+            description="Search pricing rules, inspect ranked evidence, and import or approve rule documents."
             serviceStatus={serviceStatus}
           />
           {!adminKey ? (
@@ -694,16 +717,17 @@ function App() {
               <div className="console-grid">
                 <section className="console-card">
                   <span className="eyebrow">Retrieval playground</span>
-                  <h2>Search policy knowledge</h2>
+                  <h2>Search pricing rules</h2>
+                  <RuleFilters value={retrievalFilters} onChange={setRetrievalFilters} />
                   <p>See the chunks that query rewriting and reranking select before they reach the answering agent.</p>
                   <form className="console-form" onSubmit={searchKnowledge}>
-                    <label htmlFor="knowledge-query">Employee question or search phrase</label>
+                    <label htmlFor="knowledge-query">Pricing question or search phrase</label>
                     <div className="inline-control">
                       <input
                         id="knowledge-query"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
-                        placeholder="Example: approval path for international travel"
+                        placeholder="Example: Can the CNY 50 threshold discount be combined with a CNY 20 category coupon?"
                       />
                       <button type="submit" disabled={!searchQuery.trim() || isSearching}>
                         {isSearching ? 'Searching…' : 'Run search'}
@@ -714,18 +738,24 @@ function App() {
 
                 <section className="console-card">
                   <span className="eyebrow">Document ingestion</span>
-                  <h2>Import approved policies</h2>
-                  <p>Upload a UTF-8 text or Markdown policy, or a JSON array containing title and content fields.</p>
+                  <h2>Import pricing rules</h2>
+                  <p>Upload pricing rules. Markdown headings and complete formulas are preserved during chunking.</p>
                   <form className="console-form" onSubmit={uploadKnowledge}>
                     <div className="form-grid">
                       <label>
-                        Policy title
+                        Rule title
                         <input name="policyTitle" placeholder="Uses filename when empty" />
                       </label>
                       <label>
                         Version
                         <input name="policyVersion" defaultValue="1.0" placeholder="Example: 2026.2" />
                       </label>
+                    </div>
+                    <div className="form-grid">
+                      <label>Product category<input name="category" placeholder="e.g. Appliances" /></label>
+                      <label>Promotion<input name="event" placeholder="e.g. Demo Promotion" /></label>
+                      <label>Effective from<input name="effective_from" type="date" /></label>
+                      <label>Effective until<input name="effective_to" type="date" /></label>
                     </div>
                     <label>
                       Replaces an earlier version
@@ -771,13 +801,14 @@ function App() {
                             <strong>{result.title || 'Untitled policy'}</strong>
                             {result.score !== undefined && <span>Score {Number(result.score).toFixed(3)}</span>}
                           </div>
+                          <small>{result.heading_path} · {result.source_name} · v{result.version}</small>
                           <p>{result.content || 'No content returned.'}</p>
                         </div>
                       </article>
                     ))}
                   </div>
                 ) : (
-                  <div className="empty-state">Run a search to inspect retrieved policy evidence.</div>
+                  <div className="empty-state">Run a search to inspect matching rules and their sources.</div>
                 )}
               </section>
 
