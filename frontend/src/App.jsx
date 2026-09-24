@@ -59,7 +59,7 @@ function RuleFilters({ value, onChange }) {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState('pricing')
+  const [activeView, setActiveView] = useState('chat')
   const [messages, setMessages] = useState(loadMessages)
   const [input, setInput] = useState('')
   const [convId, setConvId] = useState(

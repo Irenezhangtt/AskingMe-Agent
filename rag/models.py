@@ -41,7 +41,7 @@ class CrossEncoderReranker:
                 length = len(self._model.tokenizer.encode(query, row['content'], add_special_tokens=True))
                 if length > self._model.max_length:
                     raise ValueError('Question and rule exceed the reranker token limit; shorten the question or reduce RAG_CHUNK_TOKENS')
-            scores = self._model.predict([(query, row['content']) for row in candidates], activation_fn=torch.nn.Sigmoid())
+            scores = self._model.predict([(query, row['content']) for row in candidates], activation_fct=torch.nn.Sigmoid())
         ranked = [{**row, 'rerank_score': float(score), 'score': float(score)} for row, score in zip(candidates, scores)]
         return sorted(ranked, key=lambda row: (-row['rerank_score'], row['chunk_id']))
 

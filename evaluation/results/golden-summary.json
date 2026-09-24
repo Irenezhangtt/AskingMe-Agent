@@ -1,0 +1,115 @@
+{
+  "dataset_sha256": "8f86871c62207e004060a67a7f1c9d0f54eb3e7d114ffddf23607a9a60ea8382",
+  "archives": {
+    "golden-500-agent": {
+      "file": "golden-500-agent.json.gz",
+      "uncompressed_sha256": "78f87cce18cb55d2e194af648af9682819ef11999a062bd9b6385752f73be67c"
+    },
+    "golden-500-agent-with-conditions": {
+      "file": "golden-500-agent-with-conditions.json.gz",
+      "uncompressed_sha256": "dcb461624fd0929d239fab3f0f13912ab4fbadfff1159ca1d979235db4140e01"
+    },
+    "golden-480-retrieval": {
+      "file": "golden-480-retrieval.json.gz",
+      "uncompressed_sha256": "4ed352b014b74290a49994b650ec43ab973c47fcb3719d328c2dedf81c8580b1"
+    },
+    "golden-25-assertions": {
+      "file": "golden-25-assertions.json.gz",
+      "uncompressed_sha256": "fe30836e8d89ec670a8afe746fa0d6bca34b1e901e49e381b12f4dc20ce6d6df"
+    },
+    "golden-25-assertions-with-tools": {
+      "file": "golden-25-assertions-with-tools.json.gz",
+      "uncompressed_sha256": "35f6f91a6900a28190b5184a1cd11a6ea513656530d7f440ceec1417eb7451c2"
+    }
+  },
+  "agent_initial": {
+    "cases": 500,
+    "completed_responses": 500,
+    "provider_errors": 0,
+    "pass_rate": 0.984,
+    "fully_cited_pass_rate": 0.984,
+    "price_exact_rate": 0.9794871794871794,
+    "calculation_cases": 390,
+    "clarification_cases": 110,
+    "clarification_outcome_rate": 1.0,
+    "false_price_count": 0,
+    "mean_citation_recall_valid_responses": 0.9794871794871794,
+    "p50_ms": 2650.12,
+    "p95_ms": 4759.27
+  },
+  "agent_with_conditions": {
+    "cases": 500,
+    "completed_responses": 162,
+    "provider_errors": 338,
+    "pass_rate": 0.32,
+    "fully_cited_pass_rate": 0.32,
+    "price_exact_rate": 0.28205128205128205,
+    "calculation_cases": 390,
+    "clarification_cases": 110,
+    "clarification_outcome_rate": 0.45454545454545453,
+    "false_price_count": 0,
+    "mean_citation_recall_valid_responses": 0.9821428571428571,
+    "p50_ms": 180.635,
+    "p95_ms": 7903.28
+  },
+  "retrieval": {
+    "dense": {
+      "cases": 480,
+      "errors": 0,
+      "recall@5": 0.8875,
+      "precision@5": 0.46166666666666667,
+      "mrr@5": 0.9082291666666666,
+      "latency_ms": 23.8415625
+    },
+    "hybrid": {
+      "cases": 480,
+      "errors": 0,
+      "recall@5": 0.9625,
+      "precision@5": 0.5025,
+      "mrr@5": 0.9220486111111111,
+      "latency_ms": 22.8051875
+    },
+    "hybrid_rerank": {
+      "cases": 480,
+      "errors": 0,
+      "recall@5": 0.6395833333333333,
+      "precision@5": 0.34208333333333335,
+      "mrr@5": 0.8753472222222223,
+      "latency_ms": 2269.4513125
+    },
+    "full": {
+      "cases": 480,
+      "errors": 0,
+      "recall@5": 0.6395833333333333,
+      "precision@5": 0.34208333333333335,
+      "mrr@5": 0.8753472222222223,
+      "latency_ms": 2363.2141666666666
+    }
+  },
+  "assertions_policy_only": {
+    "sample_size": 25,
+    "judge_failures": 0,
+    "faithfulness": 0.8860248447204969,
+    "faithfulness_valid_cases": 23,
+    "answer_claim_recall": 0.52,
+    "answer_claim_recall_valid_cases": 25,
+    "retrieved_claim_recall": 0.9866666666666667,
+    "retrieved_claim_recall_valid_cases": 25,
+    "unsupported_claim_rate": 0.1139751552795031,
+    "unsupported_claim_rate_valid_cases": 23
+  },
+  "assertions_with_tool_evidence": {
+    "sample_size": 25,
+    "judge_failures": 0,
+    "faithfulness": 0.9920948616600791,
+    "faithfulness_valid_cases": 23,
+    "answer_claim_recall": 0.49333333333333335,
+    "answer_claim_recall_valid_cases": 25,
+    "retrieved_claim_recall": 0.9733333333333334,
+    "retrieved_claim_recall_valid_cases": 25,
+    "unsupported_claim_rate": 0.007905138339920946,
+    "unsupported_claim_rate_valid_cases": 23
+  },
+  "provider_blocker": "A follow-up minimal request confirmed insufficient Anthropic API credit after the condition-explanation run began failing.",
+  "limits": "Synthetic, English, inspected during development; no production/human-label accuracy claim. Current condition-explanation version is incompletely model-validated."
+}

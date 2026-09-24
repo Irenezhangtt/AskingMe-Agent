@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field, model_validator
 from core.llm_utils import extract_text_content
 from rag.calculator import calculate_final_price
 from rag.llm import SYSTEM, render_answer_plan
+from rag.chunking import RuleChunker
+from rag.rule_integrity import SCOPE_INSTRUCTIONS
 
 MAX_TEXT = 16000
 MAX_TOTAL_TEXT = 48000
@@ -98,7 +100,7 @@ collapse them into one window. Use unrestricted only for an explicit statement o
 If only one bound is explicitly specified, leave the other null. Never invent missing bounds.
 Unreadable, cropped or ambiguous text must be marked [unclear] with a warning, never guessed.
 Use unknown dates for missing validity. Labels organize rules; do not invent eligibility from labels.
-Do not calculate any final price. Return no markdown fences.'''
+Do not calculate any final price. Return no markdown fences.''' + SCOPE_INSTRUCTIONS
 
 
 def image_block(content: bytes):
@@ -146,6 +148,10 @@ async def extract_policy(llm, filename, *, text=None, image=None):
         policy.effective_from = policy.effective_to = None
         policy.date_scope = 'unknown'
         policy.warnings = (policy.warnings + ['The date scope has no matching source quotation. Confirm it manually.'])[:20]
+    try:
+        RuleChunker._boundaries(policy.content)
+    except ValueError:
+        policy.warnings = (policy.warnings + ['Unbalanced brackets or an incomplete rule block: check the original before calculating.'])[:20]
     return policy
 
 
@@ -156,6 +162,10 @@ async def calculate_uploaded_price(llm, request):
             return {'type': 'clarification', 'answer': f'Review the extracted text and scope for {policy.source_name} before calculating.', 'excluded': [], 'sources': []}
         if policy.date_scope == 'unknown':
             return {'type': 'clarification', 'answer': f'Confirm the validity period for {policy.source_name}, or explicitly confirm that it has no date restriction.', 'excluded': [], 'sources': []}
+        try:
+            RuleChunker._boundaries(policy.content)
+        except ValueError:
+            return {'type': 'clarification', 'answer': f'The policy {policy.source_name} has unmatched brackets or an incomplete rule block. Correct the policy against the original before calculating.', 'excluded': [], 'sources': []}
         reason = None
         if policy.effective_from and request.order.purchase_date < policy.effective_from:
             reason = 'Not yet effective on the purchase date'
@@ -173,19 +183,20 @@ async def calculate_uploaded_price(llm, request):
 This request is specifically a final-price calculation from user-reviewed uploads. Use ONLY this policy
 set; do not introduce shared example rules, remembered discounts or outside rules. All active uploads
 are included so that exclusions and conflicting rules remain visible. The reviewed validity dates are
-inclusive calendar dates; rule-specific hours/time zones still require clarification. Tags are descriptive
-hints, NOT sufficient evidence of eligibility or permission to exclude a conflicting rule. Match the
-order's category, labels and facts to the actual policy text. Unknown boolean facts are null, not false.
+inclusive calendar dates; rule-specific hours/time zones still require clarification. Policy metadata tags are descriptive
+organization hints, not permission to exclude a conflicting rule. Order.tags are user-supplied attributes;
+match them to explicit policy conditions without inferring other facts (Gold does not imply membership).
+Match the order category, labels and facts to the actual policy text. Unknown boolean facts are null, not false.
 Do not assume missing shipping, tax, currency or rounding provisions. Report ambiguous/cropped text,
 conflicting dates, overlapping versions, uncertain conditions and unresolved warnings as clarification.
 User review does not resolve missing conditions by itself. User-confirmed metadata may supply missing
-dates but cannot silently override contradictory dates in the policy text. If a policy establishes no
-qualifying discount, explain it with citations; do not invent an alternative. Never return type explanation
+dates but cannot silently override contradictory dates in the policy text. If no discount applies and the complete policy establishes that the original merchandise subtotal is
+payable, return a calculation of that original subtotal with citations; do not invent another discount. Never return type explanation
 for this calculation request; ask a focused clarification instead. All factual inputs are in Order.
 '''
     payload = {'Order': request.order.model_dump(mode='json'),
                'Rule documents': [{'source_id': i, **doc} for i, doc in enumerate(documents, 1)]}
-    response = await llm.client.messages.create(model=llm.model, max_tokens=1800,
+    response = await llm.client.messages.create(model=llm.model, max_tokens=3000,
         system=system, messages=[{'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}])
     try:
         plan = parse_json_response(response)
@@ -193,11 +204,14 @@ for this calculation request; ask a focused clarification instead. All factual i
             raise ValueError('Expected a calculation or clarification')
         if plan.get('type') == 'calculation' and plan.get('currency') != request.order.currency:
             raise ValueError('Calculation currency does not match the order')
+        if plan.get('type') == 'calculation' and not plan.get('rule_checks'):
+            raise ValueError('Uploaded-policy calculations require explicit condition checks')
         answer = render_answer_plan(plan, documents)
         result = {'type': plan['type'], 'answer': answer}
         if plan['type'] == 'calculation':
             result['calculation'] = {**calculate_final_price(plan['expression']), 'currency': plan['currency']}
-    except (ValueError, TypeError, KeyError, AttributeError):
-        result = {'type': 'clarification', 'answer': 'The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.'}
+    except (ValueError, TypeError, KeyError, AttributeError) as error:
+        issue = "truncated_response" if getattr(response, "stop_reason", None) == "max_tokens" else type(error).__name__
+        result = {'type': 'clarification', 'validation_failed': True, 'validation_issue': issue, 'answer': 'The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.'}
     return {**result, 'excluded': excluded,
             'sources': [{'source_id': i, **doc} for i, doc in enumerate(documents, 1)]}

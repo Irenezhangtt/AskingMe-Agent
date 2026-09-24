@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "provenance": "Synthetic fictional policies, programmatic labels; not human-annotated production gold.",
+  "cases": 500,
+  "corpus_documents": 156,
+  "families": {
+    "threshold_boundary": 20,
+    "repeated_threshold": 20,
+    "original_threshold_basis": 20,
+    "remaining_threshold_basis": 20,
+    "parenthetical_exclusion": 20,
+    "nested_exception": 20,
+    "boolean_grouping": 20,
+    "percentage_cap": 20,
+    "stacking_order": 20,
+    "exclusive_best_offer": 20,
+    "per_order_once": 20,
+    "category_scope": 20,
+    "coupon_eligibility": 20,
+    "date_boundaries": 20,
+    "rule_specific_window": 20,
+    "half_up_rounding": 20,
+    "floor_at_zero": 20,
+    "illustrative_parentheses": 20,
+    "negative_condition": 20,
+    "missing_membership": 20,
+    "missing_rounding": 20,
+    "conflicting_rules": 20,
+    "malformed_parentheses": 20,
+    "unknown_validity": 20,
+    "untrusted_policy_instructions": 20
+  },
+  "splits": {
+    "development": 100,
+    "evaluation": 400
+  },
+  "outcomes": {
+    "calculation": 390,
+    "clarification": 110
+  },
+  "retrieval_evaluable": 480,
+  "oracle": "Independent exact rational arithmetic in integer cents; final half-up.",
+  "sha256": {
+    "cases.jsonl": "8f86871c62207e004060a67a7f1c9d0f54eb3e7d114ffddf23607a9a60ea8382",
+    "corpus.jsonl": "785eb118073fb327d7af5625457ca5f9fe4e5aa5220a5b7698cae3499d960774"
+  }
+}

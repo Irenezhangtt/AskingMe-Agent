@@ -41,7 +41,7 @@ def extraction():
 
 
 def plan():
-    return {'type': 'calculation', 'expression': '(400 - 50 - 20) * 0.9', 'currency': 'CNY', 'source_ids': [1]}
+    return {'type': 'calculation', 'expression': '(400 - 50 - 20) * 0.9', 'currency': 'CNY', 'source_ids': [1], 'rule_checks': [{'condition': 'Stacking order', 'outcome': 'applies', 'reason': 'Threshold then coupon then member discount.', 'source_ids': [1]}]}
 
 
 class PolicyUploadTests(unittest.IsolatedAsyncioTestCase):

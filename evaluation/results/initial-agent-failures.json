@@ -1,0 +1,178 @@
+[
+  {
+    "id": "gold-09-10",
+    "family": "stacking_order",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "(405.48 - 50 - 20) * 0.9",
+      "final_price": "301.93",
+      "required_source_names": [
+        "stacking_order-scope.md",
+        "stacking_order-terms.md",
+        "stacking_order-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-03",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "1.24 * 0.9",
+      "final_price": "1.12",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-06",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "1.45 * 0.9",
+      "final_price": "1.31",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-08",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "1.65 * 0.9",
+      "final_price": "1.49",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-09",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "1.84 * 0.9",
+      "final_price": "1.66",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-10",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "1.85 * 0.9",
+      "final_price": "1.67",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-16-11",
+    "family": "half_up_rounding",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "2.04 * 0.9",
+      "final_price": "1.84",
+      "required_source_names": [
+        "half_up_rounding-scope.md",
+        "half_up_rounding-terms.md",
+        "half_up_rounding-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  },
+  {
+    "id": "gold-18-08",
+    "family": "illustrative_parentheses",
+    "expected": {
+      "clarification_reason": null,
+      "currency": "CNY",
+      "excluded_source_names": [],
+      "expression": "303.01 * 0.9",
+      "final_price": "272.71",
+      "required_source_names": [
+        "illustrative_parentheses-scope.md",
+        "illustrative_parentheses-terms.md",
+        "illustrative_parentheses-settlement.md"
+      ],
+      "type": "calculation"
+    },
+    "actual": {
+      "type": "clarification",
+      "answer": "The policy calculation could not be validated. Check the policy conditions, currency, rounding and missing order facts; no verified final price is available.",
+      "validation_failed": true
+    }
+  }
+]

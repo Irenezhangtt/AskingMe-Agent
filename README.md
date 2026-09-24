@@ -11,7 +11,7 @@
 [![Elasticsearch](https://img.shields.io/badge/Search-Elasticsearch_8-173f33?logo=elasticsearch&logoColor=white)](https://www.elastic.co/elasticsearch)
 [![Decimal](https://img.shields.io/badge/Calculation-Decimal-173f33)](rag/calculator.py)
 
-**[Try the live demo ↗](https://irenezhangtt.github.io/AskingMe-Agent/)** &nbsp; · &nbsp; **[Architecture](#architecture)** &nbsp; · &nbsp; **[Quick start](#quick-start)** &nbsp; · &nbsp; **[Technical guide](docs/technical-guide.md)**
+**[Try the live demo ↗](http://52.13.228.228)** &nbsp; · &nbsp; **[Architecture](#architecture)** &nbsp; · &nbsp; **[Quick start](#quick-start)** &nbsp; · &nbsp; **[Technical guide](docs/technical-guide.md)**
 
 AskingMe turns complex promotion rules into a clear, traceable final price.<br>
 Upload policy files or screenshots. Check dates and conditions. Compute the amount.
@@ -19,19 +19,14 @@ Upload policy files or screenshots. Check dates and conditions. Compute the amou
 </div>
 
 <p align="center">
-  <a href="https://irenezhangtt.github.io/AskingMe-Agent/">
-    <img src="docs/images/final-price-demo.png" width="96%" alt="AskingMe Final Price Explorer: editable order conditions, a CNY 297.00 result, and a step-by-step discount breakdown">
+  <a href="http://52.13.228.228">
+    <img src="docs/images/employee-assistant.png" width="96%" alt="AskingMe full Agent conversation interface">
   </a>
-</p>
-
-<p align="center">
-  <strong>400.00 − 50.00 − 20.00 → 10% member discount → CNY 297.00</strong><br>
-  <sub>Open the interactive demo to change the inputs and follow the calculation.</sub>
 </p>
 
 ## Upload your policies → calculate your price
 
-The full application now opens with **Policy Calculator**. Upload offer documents or screenshots, review the extracted text, effective dates and labels, then enter the purchase date and order facts. The agent uses **only those uploaded policies** to check eligibility and calculate a cited final price.
+The full application opens with **Final Price Agent** chat. Select **Policy Calculator** for your own documents. Upload offer documents or screenshots, review the extracted text, effective dates and labels, then enter the purchase date and order facts. The agent uses **only those uploaded policies** to check eligibility and calculate a cited final price.
 
 <p align="center"><img src="docs/images/policy-upload-workflow.svg" width="100%" alt="Five stages: upload documents or screenshots, extract evidence, review dates and labels, check order eligibility, calculate with Decimal"></p>
 
@@ -42,7 +37,7 @@ The full application now opens with **Policy Calculator**. Upload offer document
 | Original subtotal, purchase date, category and eligibility facts | Computes supported prices with Decimal, or asks for missing information |
 | Several overlapping policies | Keeps active evidence together and flags conflicts instead of assuming stacking |
 
-**[Setup and upload workflow →](docs/policy-calculator.md)** · Requires the full backend and a vision-capable model. The public explorer below remains a separate, fixed-rule demonstration.
+**[Setup and upload workflow →](docs/policy-calculator.md)** · Requires the full backend and a vision-capable model. The upload workflow requires the updated backend; the original hosted deployment has not yet been upgraded.
 
 <details><summary><strong>See the policy upload workspace</strong></summary>
 <br>
@@ -51,27 +46,17 @@ The full application now opens with **Policy Calculator**. Upload offer document
 
 ## Live demo
 
-Explore a fictional **Demo Promotion** for appliances. Change the original subtotal, toggle membership and coupon eligibility, and see the final price, savings, applicable rules, and arithmetic update immediately.
+**[Open the full AskingMe Agent ↗](http://52.13.228.228)** · **[Browse 500 evaluation cases](https://irenezhangtt.github.io/AskingMe-Agent/golden.html)**
 
-**[Launch the Final Price Explorer ↗](https://irenezhangtt.github.io/AskingMe-Agent/)**
+The project demo is the original React conversation application, backed by a live API. The hosted server currently runs the earlier enterprise-policy version; deployment of the final-price backend is pending. Use [Quick start](#quick-start) to run the current final-price application.
 
-| Try this | What to inspect |
-|---|---|
-| **CNY 400.00**, member, valid claimed coupon | The complete calculation produces **CNY 297.00** |
-| Change **299.99 → 300.00** | The threshold discount becomes eligible at exactly CNY 300 |
-| Turn off membership | The extra 10% discount no longer applies |
-| Disable coupon validity or claim status | The CNY 20 coupon is excluded |
+In the current source, natural-language questions pass through Elasticsearch hybrid retrieval and evidence selection. When no usable context is selected, the LLM reformulates the request with bounded retries. It then interprets policy conditions, proposes a cited plan, and calls Decimal arithmetic. Rewriting is conditional, not performed on every request.
 
-The public explorer runs the fixed example rules locally with integer-cent arithmetic. It needs no API key and does not call an LLM or Elasticsearch. The **full AI agent**, described below, retrieves rules and uses a Python Decimal tool; [run it locally](#quick-start) to ask natural-language questions.
+The **Policy Calculator** tab accepts uploaded documents and screenshots, reviewed validity dates and labels, and order facts. It supplies all active uploaded evidence to the model so a retrieval cutoff cannot silently drop an exception. Both paths require a configured backend and model access.
 
-<details>
-<summary><strong>Watch the calculation change</strong></summary>
+<details><summary><strong>View the conversation workspace</strong></summary>
 <br>
-<p align="center">
-  <a href="https://irenezhangtt.github.io/AskingMe-Agent/">
-    <img src="docs/images/final-price-demo.gif" width="96%" alt="Animated browser walkthrough showing different subtotals and membership conditions updating the final price">
-  </a>
-</p>
+<img src="docs/images/employee-assistant.png" width="96%" alt="Original AskingMe Agent conversation workspace">
 </details>
 
 ## Why this project
@@ -137,9 +122,21 @@ For configuration, API examples, deployment notes, and model/index migration, se
 
 ## Evaluation and verification
 
+The versioned [500-case golden set](examples/evaluation/golden/) covers 25 condition families, including nested parentheses, exclusions, AND/OR groups, thresholds, dates and rounding. Expected prices use an independent rational/integer-cent oracle. These are synthetic examples inspected during development, not independently human-labeled production data.
+
+| Measured run | Result |
+|---|---|
+| Complete first agent run | 492/500 passed; 382/390 exact numerical prices |
+| Real ES hybrid retrieval | Recall@5 **96.25%** across 480 retrievable cases |
+| Current rerank + context selection | Recall@5 **63.96%**; a measured coverage regression |
+| New condition-explanation format | Incomplete: 338 provider errors after API credit exhaustion |
+
+**[Full results, failures and limitations](docs/golden-evaluation.md)** · **[Resume implementation audit](docs/resume-implementation-audit.md)**. The complete first-run score does not certify the newer answer format. The retrieval experiment triggered zero rewrites, so it does not establish rewrite effectiveness.
+
+
 | Check | Verified status |
 |---|---|
-| Backend regression suite | **62 passed**, plus the optional ES test skipped in the offline run |
+| Backend regression suite | **77 passed**, plus the optional ES test skipped in the offline run |
 | Real Elasticsearch 8.17.2 integration | **Passed separately** — writes, BM25/kNN, filters, approval, archival, deletion |
 | Live screenshot-to-price smoke test | **Passed** — synthetic screenshot, validity extraction, CNY 297.00 and expired-policy exclusion |
 | Interactive demo calculation tests | **4 passed** — boundaries, eligibility, half-up rounding, invalid inputs |
@@ -148,7 +145,7 @@ For configuration, API examples, deployment notes, and model/index migration, se
 
 The offline benchmark compares **dense retrieval**, **hybrid search**, **hybrid + reranking**, and the **full rewriting pipeline**. It reports Recall@5, MRR@5, faithfulness, reference-claim coverage, stage traces, and latency.
 
-The eight labeled examples are demonstration fixtures. Production accuracy, recall improvements, and scale claims require a model-backed benchmark on a representative dataset.
+The original eight labeled examples remain small smoke-test fixtures; the 500-case synthetic suite is reported separately above. Production accuracy, recall improvements, and scale claims require a model-backed benchmark on a representative dataset.
 
 <details>
 <summary><strong>Run the checks and benchmark</strong></summary>

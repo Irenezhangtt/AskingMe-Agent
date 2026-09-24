@@ -4,6 +4,7 @@ from bisect import bisect_left, bisect_right
 from collections.abc import Callable
 
 from langchain_core.documents import Document
+from rag.rule_integrity import condition_kinds, protected_logic_spans
 
 
 def estimate_tokens(text: str) -> int:
@@ -22,7 +23,7 @@ class RuleChunker:
     def _boundaries(text):
         """Only split outside brackets, fenced code and formula lines."""
         stack, cuts = [], {0: 0, len(text): 0}
-        pairs = {')': '(', '）': '（', ']': '[', '】': '【', '}': '{'}
+        pairs = {')': '(', '）': '（', ']': '[', '】': '【', '}': '{', '］': '［', '｝': '｛', '」': '「', '』': '『'}
         fence = None
         offset = 0
         for line in text.splitlines(keepends=True):
@@ -63,6 +64,8 @@ class RuleChunker:
                 cuts[offset] = 0 if not line.strip() else 1
         if stack or fence is not None:
             raise ValueError('Unclosed bracket or fenced code block in rule document')
+        for start, end in protected_logic_spans(text):
+            cuts = {position: priority for position, priority in cuts.items() if not start < position < end}
         return cuts
 
     def _split(self, text):
@@ -129,6 +132,8 @@ class RuleChunker:
                     **(metadata or {}), 'parent_id': parent_id,
                     'heading_path': ' > '.join(headings), 'heading_level': path[-1][0] if path else 0,
                     'summary': ' / '.join([title, *headings]).strip(' /'),
+                    'condition_kinds': condition_kinds(chunk),
+                    'scope_guard': 'lexical_atomic_blocks_v1',
                     'formula_type': 'conditional' if re.search(r'如果|若|\bif\b|\belse\b', chunk, re.IGNORECASE) else ('arithmetic' if '=' in chunk else 'prose'),
                     'token_count': self.count_tokens(chunk),
                     'oversized': self.count_tokens(chunk) > self.chunk_size,
